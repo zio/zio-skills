@@ -1,7 +1,7 @@
 ---
 name: docs-research
 description: Shared research procedure for documentation skills. Find source files, tests, examples, patterns, and GitHub history when researching a topic. Used by docs-how-to-guide, docs-tutorial, and docs-data-type-ref.
-allowed-tools: Read, Glob, Grep, Bash(gh:*), Bash(sbt:*)
+allowed-tools: Read, Glob, Grep, Bash(gh:*)
 ---
 
 # Source Code Research for Documentation
@@ -80,14 +80,14 @@ Provide documentation authors with comprehensive understanding of:
 
 ## Research Workflow
 
-### Step 1: Read Core Source Files
+### Step 1a: Read Core Source Files
 For each core type, read the full source file to understand:
 - All public methods and their signatures
 - Type parameters, variance, constraints
 - Companion object and factory methods
 - Javadoc/scaladoc comments (design intent)
 
-### Step 2: Read Test Files
+### Step 1b: Read Test Files
 Search and read test suites to understand:
 - Construction patterns and common usages
 - Method chaining and composition examples
@@ -95,19 +95,19 @@ Search and read test suites to understand:
 - Error handling and exception cases
 - Integration with other types
 
-### Step 3: Find Supporting Types
+### Step 1c: Find Supporting Types
 Identify every type that core methods depend on:
 1. Grep imports in test files for the full dependency graph
 2. For each supporting type, read enough source and documentation to explain it in context
 3. Trace return types through multiple layers if needed
 
-### Step 4: Search for Real-World Patterns
+### Step 1d: Search for Real-World Patterns
 1. **Examples directory**: `Glob` for `**/examples/**/*.scala`
 2. **Integration tests**: Look for tests combining multiple types from this module
 3. **Cross-module usage**: `Grep` across other modules to find how core types integrate
 4. **Documentation patterns**: Check if similar types have documented examples you can mirror
 
-### Step 5: GitHub History Research
+### Step 2: GitHub History Research
 Use GitHub CLI to surface design rationale and common questions:
 
 ```bash
@@ -116,11 +116,12 @@ gh pr    list  --repo <owner>/<repo> --state all --search "<topic>" --limit 30
 gh search code --repo <owner>/<repo> "<topic>" --limit 20
 ```
 
-For high-value issues/PRs, read full discussion: `gh issue view <n> --comments`
+For high-value issues, read full discussion: `gh issue view <n> --comments`
+For high-value PRs, read full review discussion: `gh pr view <n> --comments`
 
-## Output Structure
+## Internal Research Notes for Documentation Agents
 
-Provide findings organized as:
+As you complete your research, build and maintain these internal notes (not a deliverable report, but a foundation for writing):
 
 - **Core types** with fully qualified names and source file paths (with line numbers)
 - **Public API** organized by category (constructors, transformations, queries, etc.)
@@ -131,8 +132,10 @@ Provide findings organized as:
 - **Architecture insights**: design patterns, abstraction layers, design decisions
 - **Critical files** (5-10 most important files) prioritized by relevance
 
+**Purpose:** These notes prepare you to write clear, accurate documentation. You do not need to emit them as a formal report—use them to guide your writing in the parent skill.
+
 ---
 
 ## Design Rule
 
-This sub-skill targets comprehensive research for documentation. Focus on understanding what documentation authors need, not on writing documentation itself.
+This sub-skill targets comprehensive research for documentation. Focus on understanding what documentation authors need to write well. The research itself is scaffolding; the parent skill (data-type-ref, module-ref, how-to-guide, tutorial) owns the final documentation output.
