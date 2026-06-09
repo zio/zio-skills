@@ -107,6 +107,41 @@ The agent produces:
 
 ---
 
+## Skills System
+
+### Two Skill Ecosystems
+
+This project maintains skills in two locations for different purposes:
+
+| Location | Purpose | Invocation | Use Case |
+|---|---|---|---|
+| `plugins/documentation/skills/` | Canonical, human-oriented skills | `/skill-name` in Claude Code | Human operators authoring docs |
+| `crossref-agent/skills/` | Agent-adapted behavior specs | `import ... with { type: 'skill' }` | Flue agents at runtime |
+
+**Key principle:** Agent skills are adapted versions of the canonical skills, trimmed of human framing and optimized for autonomous execution.
+
+### Agent Skills
+
+The `docs-writer` agent loads these skills:
+
+1. **docs-research** — Comprehensive research procedure (4 phases: Discovery, Code Flow, Architecture, Documentation Landscape). Includes GitHub history search, type dependency tracing.
+2. **docs-data-type-ref** — Writing standards and verification steps for data type reference pages.
+
+Both are loaded via import assertions in `agents/docs-writer.ts` and become part of the agent's system prompt.
+
+### Maintaining Skills
+
+When canonical skills in `plugins/documentation/skills/` are updated:
+
+1. Evaluate whether the change improves agent behavior
+2. Apply the same conceptual change to the agent version in `crossref-agent/skills/`
+3. Remove human-specific framing; adapt for autonomous execution
+4. Test the updated agent workflow
+
+See `crossref-agent/skills/README.md` for the adaptation contract and maintenance guide.
+
+---
+
 ## Running the Docs Write Data Type Ref Workflow
 
 Generate comprehensive reference documentation for a specific ZIO data type. The workflow orchestrates research, writing, verification, and integration in four phases.
