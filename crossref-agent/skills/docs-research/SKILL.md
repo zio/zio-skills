@@ -114,17 +114,54 @@ Identify every type that core methods depend on:
 
 ### Step 2: GitHub History Research
 
-Use GitHub CLI to surface design rationale and context:
+Use the `github-research` tool (available in `tools/github-research.ts`) to systematically gather design rationale and context:
+
+```typescript
+import { conductGitHubResearch, readIssueDetails, readPullRequestDetails } from '../tools/github-research.js';
+
+// Comprehensive search and analysis
+const findings = await conductGitHubResearch({
+  repository: 'zio/zio',
+  topic: 'Cached',
+  limit: 30
+});
+
+// Results organized by category:
+// - findings.designRationale: Items discussing design decisions
+// - findings.architectureDecisions: Items discussing architecture
+// - findings.keyInsights: Performance, error handling, patterns
+// - findings.commits, findings.issues, findings.prs: All results
+
+// For high-value items, read full discussions:
+const issue = findings.issues[0];
+if (issue) {
+  const fullDiscussion = readIssueDetails('zio/zio', parseInt(issue.id));
+  // Use fullDiscussion for detailed context in research notes
+}
+
+const pr = findings.prs[0];
+if (pr) {
+  const fullReview = readPullRequestDetails('zio/zio', parseInt(pr.id));
+  // Use fullReview for implementation context
+}
+```
+
+**Alternative (direct GitHub CLI):**
+
+If you prefer to use GitHub CLI commands directly:
 
 ```bash
 gh search commits --repo <owner>/<repo> "<topic>" --limit 30
 gh search issues  --repo <owner>/<repo> "<topic>" --limit 30
 gh search prs     --repo <owner>/<repo> "<topic>" --limit 30
+
+# For high-value items:
+gh issue view <n> --repo <owner>/<repo> --comments
+gh pr view <n> --repo <owner>/<repo> --comments
+gh api repos/<owner>/<repo>/commits/<sha>
 ```
 
-For high-value issues, read full discussion: `gh issue view <n> --comments`
-For high-value PRs, read full review discussion: `gh pr view <n> --comments`
-For high-value commits, review the commit message and changed files: `gh api repos/<owner>/<repo>/commits/<sha>`
+**Prerequisites:** `gh` (GitHub CLI) must be installed and authenticated.
 
 ## Internal Research Notes
 
