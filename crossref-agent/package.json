@@ -8,14 +8,15 @@
     "test:watch": "vitest"
   },
   "dependencies": {
-    "valibot": "^1.0.0",
-    "dotenv": "^16.0.0",
     "@anthropic-ai/sdk": "^0.24.3",
-    "@flue/runtime": "^0.3.2"
+    "@flue/runtime": "^0.10.1",
+    "dotenv": "^16.0.0",
+    "valibot": "^1.0.0"
   },
   "devDependencies": {
+    "@flue/cli": "^0.10.1",
+    "@types/node": "^20.0.0",
     "typescript": "^5.4.0",
-    "vitest": "^3.0.0",
-    "@types/node": "^20.0.0"
+    "vitest": "^3.0.0"
   }
 }

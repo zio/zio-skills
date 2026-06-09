@@ -3,165 +3,15 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import type { FlueContext } from '@flue/runtime';
 import docsWriterAgent from '../agents/docs-writer.js';
+import {
+  toKebabCase,
+  normalizeDataTypePath,
+  validatePathsAndResolve,
+  inferSourceDirs,
+} from '../lib/scala-source-discovery.js';
+import { runResearchPhase } from './phases/research.js';
 
-/**
- * Convert a type name to kebab-case
- * Examples: Chunk -> chunk, TypeId -> type-id, ZRef -> z-ref
- */
-function toKebabCase(name: string): string {
-  return name
-    .replace(/([A-Z])/g, '-$1')
-    .toLowerCase()
-    .replace(/^-/, '');
-}
 
-/**
- * Normalize data type path input
- * Accepts: full path, relative path, filename, or type name
- * Examples:
- *   core/shared/src/main/scala/zio/Chunk.scala -> { filePath: "...", typeName: "Chunk" }
- *   Chunk.scala -> { fileName: "Chunk.scala", typeName: "Chunk" }
- *   Chunk -> { typeName: "Chunk" }
- */
-function normalizeDataTypePath(dataTypePath: string | undefined): {
-  filePath?: string;
-  fileName?: string;
-  typeName?: string;
-} {
-  if (!dataTypePath) {
-    return {};
-  }
-
-  // If it looks like a type name (no dots, no slashes, starts with capital)
-  if (!dataTypePath.includes('.') && !dataTypePath.includes('/') && /^[A-Z]/.test(dataTypePath)) {
-    return { typeName: dataTypePath };
-  }
-
-  // If it's a file path or filename
-  if (dataTypePath.includes('.scala') || dataTypePath.endsWith('.scala')) {
-    const fileName = path.basename(dataTypePath);
-    const typeName = fileName.replace('.scala', '');
-    return { filePath: dataTypePath, fileName, typeName };
-  }
-
-  // If it contains slashes, treat as file path
-  if (dataTypePath.includes('/')) {
-    const fileName = path.basename(dataTypePath);
-    const typeName = fileName.replace('.scala', '').replace(/\.[^/.]+$/, '');
-    return { filePath: dataTypePath, fileName, typeName };
-  }
-
-  // Default: treat as type name
-  return { typeName: dataTypePath };
-}
-
-/**
- * Validate that paths are accessible and resolve relative output path
- */
-function validatePathsAndResolve(projectRoot: string, outputPath: string): string {
-  if (!fs.existsSync(projectRoot)) {
-    throw new Error(`Project root does not exist: ${projectRoot}`);
-  }
-  if (!fs.statSync(projectRoot).isDirectory()) {
-    throw new Error(`projectRoot is not a directory: ${projectRoot}`);
-  }
-
-  // Resolve output path relative to project root
-  const resolvedOutputPath = path.isAbsolute(outputPath)
-    ? outputPath
-    : path.join(projectRoot, outputPath);
-
-  // Ensure output directory exists
-  const outputDir = path.dirname(resolvedOutputPath);
-  if (!fs.existsSync(outputDir)) {
-    fs.mkdirSync(outputDir, { recursive: true });
-  }
-
-  return resolvedOutputPath;
-}
-
-/**
- * Infer possible source directories from the project root
- * Supports common Scala project layouts:
- * - Standard SBT: src/main/scala, src/test/scala
- * - Multi-platform: shared/src, jvm/src, js/src, native/src
- * - Multi-module: modules/*/src, packages/*/src
- * - Custom nested: any top-level dir with src structure
- *
- * Patterns are tried in priority order until sources are found.
- */
-function inferSourceDirs(projectRoot: string): string[] {
-  const sourceDirs: string[] = [];
-
-  // Patterns to search, in priority order
-  // Tries to match common Scala project structures across different build tools and layouts
-  const patterns = [
-    // Standard SBT layout: src/main/scala
-    'src/main/scala',
-    // Multi-platform Scala projects (shared + platform-specific variants)
-    // Examples: shared/src, jvm/src, js/src, native/src
-    '*/shared/src/main/scala',
-    '*/shared/src',
-    '*/jvm/src/main/scala',
-    '*/jvm/src',
-    '*/js/src/main/scala',
-    '*/js/src',
-    '*/native/src/main/scala',
-    '*/native/src',
-    // Single source directories at various nesting levels
-    '*/src/main/scala',
-    '*/src',
-  ];
-
-  for (const pattern of patterns) {
-    if (pattern.includes('*')) {
-      // Handle glob patterns
-      const baseDir = path.dirname(pattern);
-      const glob = path.basename(pattern);
-      const fullBaseDir = path.join(projectRoot, baseDir);
-
-      if (fs.existsSync(fullBaseDir)) {
-        try {
-          const entries = fs.readdirSync(fullBaseDir);
-          for (const entry of entries) {
-            const fullPath = path.join(fullBaseDir, entry);
-            if (fs.statSync(fullPath).isDirectory()) {
-              const globRegex = new RegExp('^' + glob.replace(/\*/g, '.*') + '$');
-              if (globRegex.test(entry)) {
-                const srcPath = path.join(fullPath, 'src');
-                if (fs.existsSync(srcPath)) {
-                  sourceDirs.push(fs.realpathSync(srcPath));
-                }
-              }
-            }
-          }
-        } catch (e) {
-          // Ignore read errors
-        }
-      }
-    } else {
-      // Direct path
-      const fullPattern = path.join(projectRoot, pattern);
-      if (fs.existsSync(fullPattern)) {
-        try {
-          sourceDirs.push(fs.realpathSync(fullPattern));
-        } catch (e) {
-          // Ignore
-        }
-      }
-    }
-  }
-
-  // Remove duplicates while preserving order
-  const unique = Array.from(new Set(sourceDirs));
-
-  // Fallback: include project root if nothing found
-  if (unique.length === 0) {
-    unique.push(projectRoot);
-  }
-
-  return unique;
-}
 
 export async function run({ init, payload }: FlueContext) {
   const {
@@ -221,74 +71,14 @@ export async function run({ init, payload }: FlueContext) {
   try {
     // Phase 1: Research
     console.log('\n[Phase 1] Research: Understanding the data type...');
-    const sourceDirList = sourceDirs.map((dir, i) => `[${i + 1}] ${dir}`).join('\n  ');
-
-    let researchPromptPrefix = `You are tasked with writing comprehensive reference documentation for the ZIO data type: ${typeName}
-
-`;
-
-    if (dataTypeInfo.filePath) {
-      researchPromptPrefix += `**Direct source file location provided:**
-${dataTypeInfo.filePath}
-
-Start by examining this file. If it's not in the project root, resolve it relative to projectRoot: ${projectRoot}
-
-If the type has platform-specific variants (shared + jvm/js/native), search for those as well.
-
-`;
-    } else {
-      researchPromptPrefix += `**Possible source code locations** (search across all of these):
-  ${sourceDirList}
-
-`;
-    }
-
-    const researchPrompt = researchPromptPrefix + `Documentation will be written to: ${resolvedOutputPath}
-Project root: ${projectRoot}
-
-Scala projects often have multiple source directories (multi-platform, multi-module, or nested layouts). The type may be defined in one or more of these directories. Search across all of them to find the complete definition.
-
-**Phase 1: Research**
-
-Your first task is to deeply research this data type:
-
-1. **Locate the type definition** in the source directories
-   - Search across all provided source directories
-   - Find the source file(s) containing ${typeName}
-   - Read the complete type definition and understand its structure
-   - If defined in multiple directories (e.g., shared + platform-specific), document all variants
-   - Note type parameters, variance, and base classes/traits
-
-2. **Study the tests and examples**
-   - Find test files for ${typeName} (in test directories across all platforms)
-   - Identify common usage patterns and test cases
-   - Look for realistic examples in the test suite
-
-3. **Locate all public methods**
-   - Extract all public methods on the type
-   - Extract all companion object methods
-   - If there are platform-specific methods, document all variants
-   - List them with signatures
-   - Note any deprecated methods
-
-4. **Understand integration points**
-   - How does ${typeName} integrate with other types?
-   - What other types depend on it?
-   - Are there related subtypes or variants?
-
-5. **Search for documentation and references**
-   - Look for existing documentation in the repo
-   - Find any GitHub discussions or issues about ${typeName}
-   - Understand common pain points and use cases
-
-After completing the research, provide a summary of:
-- The complete type definition (including all platform variants if applicable)
-- All public methods (with signatures)
-- Key use cases and integration points
-- Any important design decisions or caveats
-`;
-
-    const researchResult = await session.prompt(researchPrompt);
+    const researchResult = await runResearchPhase(session, {
+      projectRoot,
+      typeName,
+      resolvedOutputPath,
+      sourceDirs,
+      dataTypeInfo,
+      focus: 'data-type-ref',
+    });
     console.log('[Phase 1] ✓ Research complete');
     phasesCompleted.push('research');
 

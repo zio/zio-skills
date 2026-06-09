@@ -104,3 +104,74 @@ The agent produces:
 - **See Also sections**: Added at the end of pages with related topics
 - **Progress tracking**: Shows processed/remaining pages and token usage
 - **Validation reports**: Details on applied vs. skipped suggestions
+
+---
+
+## Running the Docs Write Data Type Ref Workflow
+
+Generate comprehensive reference documentation for a specific ZIO data type. The workflow orchestrates research, writing, verification, and integration in four phases.
+
+### Basic Usage
+
+```bash
+npx flue run docs-write-data-type-ref --target node \
+  --payload '{
+    "projectRoot": "/path/to/zio",
+    "outputPath": "docs/reference/chunk.md",
+    "dataTypePath": "core/shared/src/main/scala/zio/Chunk.scala"
+  }'
+```
+
+**Parameters:**
+- `projectRoot`: Absolute path to the project root (e.g., `/path/to/zio` or `/path/to/zio-http`)
+- `outputPath`: Path to the documentation file relative to projectRoot (e.g., `docs/reference/chunk.md`)
+  - Can also be absolute if needed
+  - Type name is inferred from filename (e.g., `chunk.md` → `Chunk`)
+- `dataTypePath` (optional): Path to the source file containing the type
+  - Can be a full path: `core/shared/src/main/scala/zio/Chunk.scala`
+  - Can be a relative path: `src/main/scala/zio/Chunk.scala`
+  - Can be just a filename: `Chunk.scala`
+  - Can be just a type name: `Chunk`
+  - If omitted, the agent searches all discovered source directories
+
+The source directories are automatically discovered from the project root. ZIO projects often have multiple source directories for different platforms. All are searched to find the type definition.
+
+**Example:** `projectRoot: /path/to/zio` discovers:
+- `/path/to/zio/core/shared/src` (shared code)
+- `/path/to/zio/core/jvm/src` (JVM-specific)
+- `/path/to/zio/core/js/src` (JS-specific)
+- `/path/to/zio/core/native/src` (Native-specific)
+
+### What the Workflow Does
+
+**Phase 1 — Research**
+- Locates the type definition and source file
+- Reads tests and identifies usage patterns
+- Extracts all public methods and companion object methods
+- Finds integration points and related types
+
+**Phase 2 — Write Documentation**
+- Generates markdown file at `docs/reference/<type-name>.md`
+- Follows ZIO documentation conventions and structure
+- Creates sections: Opening Definition, Motivation, Quick Showcase, Installation, Construction, Core Operations, etc.
+- Documents every public method with examples
+
+**Phase 3 — Verify**
+- Checks method coverage against source code
+- Runs mdoc to verify all code examples compile
+- Fixes compilation errors iteratively
+- Reports final coverage and error counts
+
+**Phase 4 — Integrate**
+- Formats Scala code with `sbt scalafmtAll`
+- Runs lint checks with `sbt check`
+- Updates `sidebars.js` with new documentation entry
+- Updates `docs/index.md` with cross-references
+
+### Output
+
+On success:
+- Generated markdown file at `docs/reference/<kebab-case-type-name>.md`
+- Updated sidebar and index files
+- Fully integrated into documentation site
+- All code examples verified to compile
