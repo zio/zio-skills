@@ -1,5 +1,5 @@
 import { createAgent, registerApiProvider } from '@flue/runtime';
-import { run as workflowRun } from './dist/workflows/docs-write-data-type-ref.js';
+import { run as workflowRun } from './dist/workflows/write-data-type-ref.js';
 import fs from 'fs';
 
 // Register Anthropic provider

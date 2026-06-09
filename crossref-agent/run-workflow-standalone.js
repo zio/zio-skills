@@ -1,6 +1,6 @@
 import 'dotenv/config.js';
 import Anthropic from '@anthropic-ai/sdk';
-import { run } from './dist/workflows/docs-write-data-type-ref.js';
+import { run } from './dist/workflows/write-data-type-ref.js';
 
 const client = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY

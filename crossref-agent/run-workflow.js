@@ -1,6 +1,6 @@
 import { registerApiProvider, dispatch } from '@flue/runtime';
 import docsWriterAgent from './dist/agents/docs-writer.js';
-import { run } from './dist/workflows/docs-write-data-type-ref.js';
+import { run } from './dist/workflows/write-data-type-ref.js';
 
 // Register Anthropic API provider
 registerApiProvider({

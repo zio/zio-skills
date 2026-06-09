@@ -114,7 +114,7 @@ Generate comprehensive reference documentation for a specific ZIO data type. The
 ### Basic Usage
 
 ```bash
-npx flue run docs-write-data-type-ref --target node \
+npx flue run write-data-type-ref --target node \
   --payload '{
     "projectRoot": "/path/to/zio",
     "outputPath": "docs/reference/chunk.md",
