@@ -1,4 +1,5 @@
-import type { FlueSession } from '@flue/runtime';
+import type { FlueContext } from '@flue/runtime';
+import docsResearcherAgent from '../../agents/docs-researcher.js';
 
 export type ResearchFocus = 'data-type-ref' | 'tutorial' | 'guide' | 'explanation';
 
@@ -12,12 +13,13 @@ export interface ResearchConfig {
 }
 
 /**
- * Run the research phase for a documentation topic
+ * Run the research phase for a documentation topic in a dedicated researcher agent
+ * Creates its own harness to isolate research context from the writer
  * Delegates to the docs-research skill for comprehensive research guidance
  * The skill covers: source discovery, code flow analysis, architecture analysis, and documentation landscape
  * The focus parameter customizes what insights to emphasize in the research output
  */
-export async function runResearchPhase(session: FlueSession, config: ResearchConfig): Promise<string> {
+export async function runResearchPhase(init: FlueContext['init'], config: ResearchConfig): Promise<string> {
   const { projectRoot, typeName, resolvedOutputPath, sourceDirs, dataTypeInfo, focus } = config;
 
   const sourceDirList = sourceDirs.map((dir, i) => `[${i + 1}] ${dir}`).join('\n  ');
@@ -55,6 +57,11 @@ ${getFocusInstruction(focus, typeName)}
 
 Output: Structured research notes (not a formal report) that prepare the documentation writer for Phase 2.`;
 
+  // Set environment variable for agent's sandbox cwd
+  process.env.FLUE_PROJECT_ROOT = projectRoot;
+
+  const harness = await init(docsResearcherAgent, { name: 'docs-researcher' });
+  const session = await harness.session();
   const result = await session.prompt(prompt);
   return result.text || String(result);
 }

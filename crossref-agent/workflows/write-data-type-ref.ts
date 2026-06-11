@@ -10,6 +10,41 @@ import {
   inferSourceDirs,
 } from '../lib/scala-source-discovery.js';
 import { runResearchPhase } from './phases/research.js';
+import { createRunMdoc } from '../tools/run_mdoc.js';
+
+function findRecentlyModifiedMarkdownFiles(projectRoot: string, docsDir: string, sinceTime: number): string[] {
+  if (!fs.existsSync(docsDir)) {
+    return [];
+  }
+
+  const result: string[] = [];
+  const walk = (dir: string) => {
+    try {
+      const entries = fs.readdirSync(dir, { withFileTypes: true });
+      for (const entry of entries) {
+        if (entry.name.startsWith('.')) continue; // Skip hidden files/dirs
+        const fullPath = path.join(dir, entry.name);
+        if (entry.isDirectory()) {
+          walk(fullPath);
+        } else if (entry.isFile() && (entry.name.endsWith('.md') || entry.name.endsWith('.mdx'))) {
+          try {
+            const stat = fs.statSync(fullPath);
+            if (stat.mtimeMs >= sinceTime) {
+              result.push(path.relative(projectRoot, fullPath));
+            }
+          } catch {
+            // Ignore files that can't be stat'd
+          }
+        }
+      }
+    } catch {
+      // Ignore directories that can't be read
+    }
+  };
+
+  walk(docsDir);
+  return result;
+}
 
 
 
@@ -60,18 +95,17 @@ export async function run({ init, payload }: FlueContext) {
     console.log(`    [${i + 1}] ${dir}`);
   });
 
-  // Initialize agent and start session
-  const harness = await init(docsWriterAgent, { name: 'docs-write-data-type-ref' });
-  const session = await harness.session();
-
   const phasesCompleted: string[] = [];
   let mdocErrors = 0;
   let methodsCovered = 0;
 
   try {
-    // Phase 1: Research
+    // Set environment variable for agents' sandbox cwd
+    process.env.FLUE_PROJECT_ROOT = projectRoot;
+
+    // Phase 1: Research (in separate researcher agent)
     console.log('\n[Phase 1] Research: Understanding the data type...');
-    const researchResult = await runResearchPhase(session, {
+    const researchResult = await runResearchPhase(init, {
       projectRoot,
       typeName,
       resolvedOutputPath,
@@ -82,11 +116,21 @@ export async function run({ init, payload }: FlueContext) {
     console.log('[Phase 1] ✓ Research complete');
     phasesCompleted.push('research');
 
+    // Phase 2-4: Initialize writer agent with fresh session
+    const harness = await init(docsWriterAgent, { name: 'docs-write-data-type-ref' });
+    const session = await harness.session();
+
     // Phase 2: Write Documentation
     console.log('\n[Phase 2] Writing: Generating documentation...');
-    const writePrompt = `**Phase 2: Write Documentation**
+    const phase2StartTime = Date.now();
+    const writePrompt = `**Research Findings (from research phase):**
+${researchResult}
 
-Based on your research from Phase 1, now write comprehensive reference documentation for ${typeName}.
+---
+
+**Phase 2: Write Documentation**
+
+Based on the research findings above, now write comprehensive reference documentation for ${typeName}.
 
 **Requirements:**
 - Output file path: ${resolvedOutputPath}
@@ -110,8 +154,18 @@ Write the complete markdown file and save it to the specified output path.`;
     console.log('[Phase 2] ✓ Documentation written');
     phasesCompleted.push('write');
 
+    // Detect all changed/new markdown files since Phase 2 started
+    const docsDir = path.join(projectRoot, 'docs');
+    const changedFiles = findRecentlyModifiedMarkdownFiles(projectRoot, docsDir, phase2StartTime);
+    console.log(`\n[Phase 2→3] Found ${changedFiles.length} changed/new markdown files:`);
+    changedFiles.forEach(file => console.log(`  - ${file}`));
+
     // Phase 3: Verify
     console.log('\n[Phase 3] Verifying: Checking documentation and code...');
+    const changedFilesStr = changedFiles.length > 0
+      ? `\n\n**Files to compile with mdoc** (detected as new/changed):\n${changedFiles.map(f => `- ${f}`).join('\n')}`
+      : '\n\n**Note:** No additional markdown files were changed. Compile the main output file only.';
+
     const verifyPrompt = `**Phase 3: Verify Documentation**
 
 Verify the documentation you just wrote for ${typeName} at ${resolvedOutputPath}
@@ -123,9 +177,11 @@ Verify the documentation you just wrote for ${typeName} at ${resolvedOutputPath}
    - Verify that each method documented in the file has an explanation
    - Note the total method count and coverage percentage
 
-2. **Verify mdoc compilation**
-   - Run mdoc to compile all code examples
-   - Fix any compilation errors
+2. **Compile with run_mdoc**${changedFilesStr}
+   - **CRITICAL: Use ONLY the run_mdoc tool for compilation** (do not use bash/sbt directly)
+   - The run_mdoc tool provides structured error parsing and proper error handling
+   - Call run_mdoc with paths: ${JSON.stringify(changedFiles)}
+   - If run_mdoc returns errors, fix the markdown and call it again
    - Iterate until all code blocks compile with zero errors
    - Record the final mdoc error count (should be 0)
 
@@ -141,7 +197,10 @@ Report:
 - Any fixes applied
 - Status: success/partial/failed`;
 
-    const verifyResult = await session.prompt(verifyPrompt);
+    const verifyResult = await session.prompt(verifyPrompt, {
+      tools: [createRunMdoc(projectRoot)],
+    });
+
     console.log('[Phase 3] ✓ Verification complete');
     phasesCompleted.push('verify');
 
