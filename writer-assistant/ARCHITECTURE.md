@@ -7,7 +7,7 @@ This document serves as a critical, living template designed to equip agents wit
 Crossref Agent is a TypeScript-based documentation cross-reference assistant built on the Flue framework. It analyzes Markdown documentation to discover and insert cross-linking opportunities while maintaining code safety and confidence-based validation.
 
 ```
-crossref-agent/
+writer-assistant/
 ├── agents/
 │   └── page-linker.ts              # Flue agent profile (Claude Haiku 4.5)
 │
@@ -490,7 +490,7 @@ keywords: ["setup", "installation", "concurrency", "fiber"]
 **Population:**
 - Extracted by metadata-agent during pre-enrichment or on-demand phases
 - Can also be manually authored in frontmatter
-- Once populated, reused by crossref-agent for better link suggestions
+- Once populated, reused by writer-assistant for better link suggestions
 
 **Usage:**
 - **Indexing:** Extracted during reindex phase for building page index

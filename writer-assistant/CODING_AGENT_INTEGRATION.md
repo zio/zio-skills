@@ -1,6 +1,6 @@
 # Coding-Agent Integration
 
-The crossref-agent now includes an integrated `coding-agent` for verification tasks during the issue development cycle.
+The writer-assistant now includes an integrated `coding-agent` for verification tasks during the issue development cycle.
 
 ## Overview
 

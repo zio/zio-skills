@@ -88,8 +88,8 @@ Co-Authored-By: Claude Haiku 4.5 <noreply@anthropic.com>"
 - [ ] **Step 1: Create skill directory and file**
 
 ```bash
-mkdir -p /home/milad/sources/zio-skills/crossref-agent/skills/metadata-extractor
-touch /home/milad/sources/zio-skills/crossref-agent/skills/metadata-extractor/SKILL.md
+mkdir -p /home/milad/sources/zio-skills/writer-assistant/skills/metadata-extractor
+touch /home/milad/sources/zio-skills/writer-assistant/skills/metadata-extractor/SKILL.md
 ```
 
 - [ ] **Step 2: Write skill content**
@@ -221,7 +221,7 @@ export default createAgent(() => ({
 - [ ] **Step 2: Verify TypeScript compiles**
 
 ```bash
-cd /home/milad/sources/zio-skills/crossref-agent && npx tsc --noEmit
+cd /home/milad/sources/zio-skills/writer-assistant && npx tsc --noEmit
 ```
 
 Expected: No errors
@@ -559,7 +559,7 @@ EOF
 Run the workflow:
 
 ```bash
-cd /home/milad/sources/zio-skills/crossref-agent
+cd /home/milad/sources/zio-skills/writer-assistant
 export ANTHROPIC_API_KEY=$(grep ANTHROPIC_API_KEY .env | cut -d= -f2)
 npm run build
 npx flue run extract-metadata --target node \
@@ -1294,7 +1294,7 @@ EOF
 Run extract-metadata:
 
 ```bash
-cd /home/milad/sources/zio-skills/crossref-agent
+cd /home/milad/sources/zio-skills/writer-assistant
 export ANTHROPIC_API_KEY=$(grep ANTHROPIC_API_KEY .env | cut -d= -f2)
 npx flue run extract-metadata --target node \
   --payload '{"docsDir":"/tmp/smoke-test-docs","mode":"all"}'

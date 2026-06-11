@@ -122,7 +122,7 @@ npm run crossref -- --mode=full
 - **Testing**: Vitest with 43+ test cases
 - **State Storage**: JSON-based index and suggestion tracking
 
-For detailed architecture and implementation details, see [crossref-agent/ARCHITECTURE.md](crossref-agent/ARCHITECTURE.md) and [crossref-agent/README.md](crossref-agent/README.md).
+For detailed architecture and implementation details, see [writer-assistant/ARCHITECTURE.md](writer-assistant/ARCHITECTURE.md) and [writer-assistant/README.md](writer-assistant/README.md).
 
 ## Skills
 

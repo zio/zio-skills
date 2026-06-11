@@ -10,7 +10,7 @@ Skills in this directory are behavior specifications for autonomous Flue agents.
 
 ### Two Skill Ecosystems
 
-| Aspect | `plugins/documentation/skills/` | `crossref-agent/skills/` |
+| Aspect | `plugins/documentation/skills/` | `writer-assistant/skills/` |
 |---|---|---|
 | **Audience** | Human operators (Claude Code CLI) | Flue agent runtime |
 | **Invocation** | `/skill-name` slash commands | `import ... with { type: 'skill' }` in agent code |
@@ -76,7 +76,7 @@ Example: A feature is added to `plugins/documentation/skills/docs-research/SKILL
 
 1. **Understand the change** — Read the updated plugin skill
 2. **Assess relevance** — Does this change improve agent behavior?
-3. **Adapt the agent version** — Apply the same conceptual change to `crossref-agent/skills/docs-research/SKILL.md`, removing human framing
+3. **Adapt the agent version** — Apply the same conceptual change to `writer-assistant/skills/docs-research/SKILL.md`, removing human framing
 4. **Test** — Run a workflow using the updated skill and verify the research output improves
 5. **Document** — Update this README if the adaptation rules change
 
@@ -89,7 +89,7 @@ In `plugins/documentation/skills/docs-research/SKILL.md`:
 - Note common exception types and recovery patterns
 ```
 
-In `crossref-agent/skills/docs-research/SKILL.md`:
+In `writer-assistant/skills/docs-research/SKILL.md`:
 ```markdown
 ### Additional Research: Error Handling
 
@@ -139,7 +139,7 @@ When creating a new workflow that needs a skill:
    - If yes: Adapt it (follow the adaptation contract above)
    - If no: Create a new skill from scratch
 
-2. **Create the directory:** `crossref-agent/skills/<skill-name>/`
+2. **Create the directory:** `writer-assistant/skills/<skill-name>/`
 
 3. **Create `SKILL.md`** with frontmatter and content following Flue conventions
 

@@ -128,7 +128,7 @@ Phases 3 and 4 are unchanged — they use `session.prompt(...)` and work identic
 ### Step 1: Build
 
 ```bash
-cd crossref-agent && npm run build
+cd writer-assistant && npm run build
 # Zero TypeScript errors
 ```
 

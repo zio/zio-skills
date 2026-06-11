@@ -281,7 +281,7 @@ All commands use `--json` flags to return structured data instead of human-reada
 
 ## Related
 
-- **docs-research skill:** `crossref-agent/skills/docs-research/SKILL.md`
-- **Research phase:** `crossref-agent/workflows/phases/research.ts`
-- **Agent:** `crossref-agent/agents/docs-writer.ts`
+- **docs-research skill:** `writer-assistant/skills/docs-research/SKILL.md`
+- **Research phase:** `writer-assistant/workflows/phases/research.ts`
+- **Agent:** `writer-assistant/agents/docs-writer.ts`
 - **GitHub CLI manual:** https://cli.github.com/manual/

@@ -41,7 +41,7 @@ Perfect for improving internal SEO, helping readers discover related documentati
 
 ## Workflow Overview
 
-The crossref-agent processes documentation through four key stages:
+The writer-assistant processes documentation through four key stages:
 
 ```
 ┌─────────────────────────────────────────────────────┐
@@ -113,7 +113,7 @@ The crossref-agent processes documentation through four key stages:
 ### Installation
 
 ```bash
-cd crossref-agent
+cd writer-assistant
 npm install
 ```
 
@@ -366,7 +366,7 @@ npm exec -- flue run crossref --target node \
 
 ### Metadata Extraction
 
-The crossref-agent can be extended with metadata extraction capabilities to enrich your documentation before running cross-reference analysis. This improves link quality by ensuring each page has proper metadata (title, description, keywords).
+The writer-assistant can be extended with metadata extraction capabilities to enrich your documentation before running cross-reference analysis. This improves link quality by ensuring each page has proper metadata (title, description, keywords).
 
 #### Pre-enrichment (Recommended)
 
@@ -381,7 +381,7 @@ flue run extract-metadata --target node \
 This pre-enrichment approach:
 - Extracts and generates metadata for all pages in one batch
 - Populates page frontmatter with title, description, and keywords
-- Provides complete context for the crossref-agent to work with
+- Provides complete context for the writer-assistant to work with
 - **Most efficient** for initial documentation setup
 
 **When to use pre-enrichment:**
@@ -403,11 +403,11 @@ flue run workflows/crossref.ts --target node \
   --payload '{"docsDir":"./docs","mode":"autopilot"}'
 ```
 
-The crossref-agent automatically uses extracted metadata (descriptions, keywords) to make smarter linking decisions.
+The writer-assistant automatically uses extracted metadata (descriptions, keywords) to make smarter linking decisions.
 
 #### Fallback (On-Demand)
 
-If you skip pre-enrichment, the crossref-agent will extract metadata on-demand for pages as needed:
+If you skip pre-enrichment, the writer-assistant will extract metadata on-demand for pages as needed:
 
 ```bash
 # Run without pre-enrichment (metadata extracted per-page)
@@ -628,7 +628,7 @@ npm test:watch
 ### Project Structure
 
 ```
-crossref-agent/
+writer-assistant/
 ├── tools/
 │   ├── schemas.ts              # Valibot schema definitions
 │   ├── markdown-parser.ts      # Pure parsing functions
