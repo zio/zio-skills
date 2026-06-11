@@ -26,5 +26,5 @@ jobs:
       - name: Use Nix cache
         uses: DeterminateSystems/magic-nix-cache-action@v4
 
-      - name: Run nix flake check
-        run: nix flake check
+      - name: Run nix flake check for writer-assistant
+        run: cd writer-assistant && nix flake check
