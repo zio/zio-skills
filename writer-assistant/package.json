@@ -8,19 +8,19 @@
     "test:watch": "vitest"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.24.3",
-    "@flue/runtime": "^0.10.1",
-    "dotenv": "^16.0.0",
-    "valibot": "^1.0.0"
+    "@anthropic-ai/sdk": "^0.104.2",
+    "@flue/runtime": "^1.0.0-beta.1",
+    "dotenv": "^17.4.2",
+    "valibot": "^1.4.1"
   },
   "devDependencies": {
-    "@flue/cli": "^0.10.1",
-    "@types/node": "^20.0.0",
-    "@typescript-eslint/eslint-plugin": "^7.0.0",
-    "@typescript-eslint/parser": "^7.0.0",
-    "eslint": "^8.57.0",
-    "prettier": "^3.2.5",
-    "typescript": "^5.4.0",
-    "vitest": "^3.0.0"
+    "@flue/cli": "^1.0.0-beta.1",
+    "@types/node": "^25.9.3",
+    "@typescript-eslint/eslint-plugin": "^8.61.1",
+    "@typescript-eslint/parser": "^8.61.1",
+    "eslint": "^10.5.0",
+    "prettier": "^3.8.4",
+    "typescript": "^6.0.3",
+    "vitest": "^4.1.9"
   }
 }
