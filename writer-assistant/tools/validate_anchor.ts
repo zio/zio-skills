@@ -1,4 +1,5 @@
-import { defineTool, Type } from '@flue/runtime';
+import { defineTool } from '@flue/runtime';
+import * as v from 'valibot';
 import * as fs from 'node:fs';
 import { extractHeadings } from '../lib/markdown-parser.js';
 import type { CrossrefState } from '../lib/schemas.js';
@@ -8,14 +9,9 @@ export function createValidateAnchor(state: CrossrefState) {
     name: 'validate_anchor',
     description:
       'Check if an anchor/heading exists in a target page. Returns whether the anchor is available and lists all available headings.',
-    parameters: Type.Object({
-      pageId: Type.String({
-        description: 'The page ID to check (e.g., "reference__core__runtime")',
-      }),
-      anchorText: Type.String({
-        description:
-          'The anchor text or heading to validate (e.g., "setConfigProvider", "set_config_provider")',
-      }),
+    parameters: v.object({
+      pageId: v.string(),
+      anchorText: v.string(),
     }),
     execute: async (args: Record<string, any>) => {
       const pageId = args.pageId as string;
