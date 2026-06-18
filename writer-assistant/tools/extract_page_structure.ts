@@ -1,4 +1,5 @@
-import { defineTool, Type } from '@flue/runtime';
+import { defineTool } from '@flue/runtime';
+import * as v from 'valibot';
 import * as fs from 'node:fs';
 import { extractHeadings } from '../lib/markdown-parser.js';
 import type { CrossrefState } from '../lib/schemas.js';
@@ -8,10 +9,8 @@ export function createExtractPageStructure(state: CrossrefState) {
     name: 'extract_page_structure',
     description:
       'Extract the heading structure (table of contents) from a page. Shows all available anchors that can be linked to.',
-    parameters: Type.Object({
-      pageId: Type.String({
-        description: 'The page ID (e.g., "reference__stream__zsink__index")',
-      }),
+    parameters: v.object({
+      pageId: v.string(),
     }),
     execute: async (args: Record<string, any>) => {
       const pageId = args.pageId as string;

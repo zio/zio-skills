@@ -1,4 +1,5 @@
-import { defineTool, Type } from '@flue/runtime';
+import { defineTool } from '@flue/runtime';
+import * as v from 'valibot';
 import type { CrossrefState } from '../lib/schemas.js';
 
 export function createGetAdjacentPages(state: CrossrefState) {
@@ -6,10 +7,8 @@ export function createGetAdjacentPages(state: CrossrefState) {
     name: 'get_adjacent_pages',
     description:
       'Get all pages in the same documentation section. Adjacent pages are strong candidates for See Also links.',
-    parameters: Type.Object({
-      pageId: Type.String({
-        description: 'The page ID (e.g., "reference__stream__zsink__index")',
-      }),
+    parameters: v.object({
+      pageId: v.string(),
     }),
     execute: async (args: Record<string, any>) => {
       const pageId = args.pageId as string;

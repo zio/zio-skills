@@ -1,4 +1,5 @@
-import { defineTool, Type } from '@flue/runtime';
+import { defineTool } from '@flue/runtime';
+import * as v from 'valibot';
 import { execSync } from 'node:child_process';
 import * as path from 'node:path';
 
@@ -6,12 +7,8 @@ export function createRunMdoc(projectRoot: string) {
   return defineTool({
     name: 'run_mdoc',
     description: 'Compile markdown/mdx files with mdoc and get structured error feedback. Returns: success status, error count, and parsed error messages. Use this instead of running sbt directly to get reliable error parsing for iterative fixes.',
-    parameters: Type.Object({
-      paths: Type.Optional(Type.Array(Type.String({
-        description: 'Path to a .md/.mdx file or directory (e.g. "docs/reference/concurrency/dequeue.md" or "docs/reference/core/")'
-      }), {
-        description: 'List of relative paths (files or directories). Omit to build the entire docs project with "sbt docs/mdoc".'
-      })),
+    parameters: v.object({
+      paths: v.optional(v.array(v.string())),
     }),
     execute: async (args: Record<string, any>) => {
       const paths = args.paths as string[] | undefined;

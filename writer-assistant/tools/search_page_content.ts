@@ -1,4 +1,5 @@
-import { defineTool, Type } from '@flue/runtime';
+import { defineTool } from '@flue/runtime';
+import * as v from 'valibot';
 import * as fs from 'node:fs';
 import type { CrossrefState } from '../lib/schemas.js';
 
@@ -7,17 +8,11 @@ export function createSearchPageContent(state: CrossrefState) {
     name: 'search_page_content',
     description:
       'Search within a specific page for occurrences of a term. Returns context snippets showing where the term appears.',
-    parameters: Type.Object({
-      pageId: Type.String({
-        description: 'The page ID to search within (e.g., "reference__stream__zsink__index")',
-      }),
-      searchTerm: Type.String({
-        description: 'Term or phrase to search for',
-      }),
-      contextLines: Type.Optional(
-        Type.Number({
-          description: 'Number of surrounding lines to include in snippets (default: 2)',
-        })
+    parameters: v.object({
+      pageId: v.string(),
+      searchTerm: v.string(),
+      contextLines: v.optional(
+        v.number()
       ),
     }),
     execute: async (args: Record<string, any>) => {

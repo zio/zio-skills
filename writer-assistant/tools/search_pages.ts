@@ -1,4 +1,5 @@
-import { defineTool, Type } from '@flue/runtime';
+import { defineTool } from '@flue/runtime';
+import * as v from 'valibot';
 import type { CrossrefState } from '../lib/schemas.js';
 
 export function createSearchPages(state: CrossrefState) {
@@ -6,14 +7,10 @@ export function createSearchPages(state: CrossrefState) {
     name: 'search_pages',
     description:
       'Search the documentation index for pages by title, keywords, or topic. Returns matching pages ranked by relevance.',
-    parameters: Type.Object({
-      query: Type.String({
-        description: 'Search term or topic (e.g., "ZStream operations", "configuration", "Fiber")',
-      }),
-      limit: Type.Optional(
-        Type.Number({
-          description: 'Maximum results to return (default: 5)',
-        })
+    parameters: v.object({
+      query: v.string(),
+      limit: v.optional(
+        v.number()
       ),
     }),
     execute: async (args: Record<string, any>) => {
