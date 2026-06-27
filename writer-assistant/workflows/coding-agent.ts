@@ -4,7 +4,7 @@ import codingAgent from '../agents/coding-agent.js';
 
 export default defineWorkflow({
   agent: codingAgent,
-  input: v.record(v.string(), v.unknown()),
+  input: v.looseObject({}),
   run: (async (ctx: any) => {
     const { harness, input } = ctx;
     const { pwd, prompt } = input as { pwd?: string; prompt?: string };

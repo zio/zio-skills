@@ -15,7 +15,7 @@ import { createBuildWebsite } from '../tools/build_website.js';
 
 export default defineWorkflow({
   agent: docsIntegratorAgent,
-  input: v.record(v.string(), v.unknown()),
+  input: v.looseObject({}),
   run: integrateRun as (ctx: any) => any,
 });
 

@@ -15,7 +15,7 @@ import { verifyBuild } from './phases/verify.js';
 
 export default defineWorkflow({
   agent: pageLinkerAgent,
-  input: v.record(v.string(), v.unknown()),
+  input: v.looseObject({}),
   run: crossrefRun as (ctx: any) => any,
 });
 

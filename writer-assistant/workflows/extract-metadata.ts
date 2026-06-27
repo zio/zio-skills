@@ -135,7 +135,7 @@ function needsExtraction(
 
 export default defineWorkflow({
   agent: metadataExtractorAgent,
-  input: v.record(v.string(), v.unknown()),
+  input: v.looseObject({}),
   run: extractMetadataRun as (ctx: any) => any,
 });
 

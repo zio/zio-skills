@@ -1,5 +1,8 @@
 import 'dotenv/config.js';
+import * as v from 'valibot';
 import * as fs from 'node:fs';
+import { defineWorkflow } from '@flue/runtime';
+import docsWriterAgent from '../agents/docs-writer.js';
 import {
   MdocError,
   resolvePaths,
@@ -17,8 +20,13 @@ export interface CheckMdocResult {
   resolvedPaths: string[];
 }
 
-// TODO: defineWorkflow requires an agent — assign one when migrating fully to Flue 1.0
-export async function run({ input }: { input: any }) {
+export default defineWorkflow({
+  agent: docsWriterAgent,
+  input: v.looseObject({}),
+  run: checkMdocRun as (ctx: any) => any,
+});
+
+async function checkMdocRun({ input }: { input: any }) {
   const { projectRoot, paths: rawPaths } = input as {
     projectRoot: string;
     paths?: string | string[];

@@ -25,7 +25,7 @@ const DEFAULT_MAX_ROUNDS = 3;
 
 export default defineWorkflow({
   agent: docsWriterAgent,
-  input: v.record(v.string(), v.unknown()),
+  input: v.looseObject({}),
   run: fixMdocRun as (ctx: any) => any,
 });
 

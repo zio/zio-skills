@@ -63,7 +63,7 @@ function parseWebsiteBuildErrors(output: string): string[] {
 
 export default defineWorkflow({
   agent: docsWriterAgent,
-  input: v.record(v.string(), v.unknown()),
+  input: v.looseObject({}),
   run: fixWebsiteRun as (ctx: any) => any,
 });
 

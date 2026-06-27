@@ -87,7 +87,7 @@ function findRecentlyModifiedMarkdownFiles(
 
 export default defineWorkflow({
   agent: docsWriterAgent,
-  input: v.record(v.string(), v.unknown()),
+  input: v.looseObject({}),
   run: writeTutorialRun as (ctx: any) => any,
 });
 

@@ -1,6 +1,9 @@
 import 'dotenv/config.js';
+import * as v from 'valibot';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
+import { defineWorkflow } from '@flue/runtime';
+import docsWriterAgent from '../agents/docs-writer.js';
 import { runBuild } from '../lib/build-runner.js';
 
 export interface CheckWebsiteResult {
@@ -61,8 +64,13 @@ function parseWebsiteBuildErrors(output: string): string[] {
   return errors;
 }
 
-// TODO: defineWorkflow requires an agent — assign one when migrating fully to Flue 1.0
-export async function run({ input }: { input: any }) {
+export default defineWorkflow({
+  agent: docsWriterAgent,
+  input: v.looseObject({}),
+  run: checkWebsiteRun as (ctx: any) => any,
+});
+
+async function checkWebsiteRun({ input }: { input: any }) {
   const {
     projectRoot,
     docsDir: inputDocsDir,

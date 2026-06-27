@@ -1,7 +1,10 @@
 import 'dotenv/config.js';
+import * as v from 'valibot';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { spawnSync } from 'node:child_process';
+import { defineWorkflow } from '@flue/runtime';
+import docsWriterAgent from '../agents/docs-writer.js';
 import { runPreview } from '../lib/build-runner.js';
 
 export interface PreviewWebsiteResult {
@@ -15,8 +18,13 @@ export interface PreviewWebsiteResult {
   mdocOutput: string;
 }
 
-// TODO: defineWorkflow requires an agent — assign one when migrating fully to Flue 1.0
-export async function run({ input }: { input: any }) {
+export default defineWorkflow({
+  agent: docsWriterAgent,
+  input: v.looseObject({}),
+  run: previewWebsiteRun as (ctx: any) => any,
+});
+
+async function previewWebsiteRun({ input }: { input: any }) {
   const {
     projectRoot,
     docsDir: inputDocsDir,

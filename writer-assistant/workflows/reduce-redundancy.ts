@@ -16,7 +16,7 @@ function inferDocsDir(filePath: string): string | null {
 
 export default defineWorkflow({
   agent: docsRedundancyFixerAgent,
-  input: v.record(v.string(), v.unknown()),
+  input: v.looseObject({}),
   run: reduceRedundancyRun as (ctx: any) => any,
 });
 

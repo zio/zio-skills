@@ -13,7 +13,7 @@ import { runDiagramPhase } from './phases/diagram.js';
 
 export default defineWorkflow({
   agent: docsWriterAgent,
-  input: v.record(v.string(), v.unknown()),
+  input: v.looseObject({}),
   run: designDiagramRun as (ctx: any) => any,
 });
 

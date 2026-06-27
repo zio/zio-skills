@@ -16,7 +16,7 @@ function inferDocsDir(filePath: string): string | null {
 
 export default defineWorkflow({
   agent: docsWriterAgent,
-  input: v.record(v.string(), v.unknown()),
+  input: v.looseObject({}),
   run: fixWritingStyleRun as (ctx: any) => any,
 });
 
