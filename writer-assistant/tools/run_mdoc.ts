@@ -8,11 +8,11 @@ export function createRunMdoc(projectRoot: string) {
     name: 'run_mdoc',
     description:
       'Compile markdown/mdx files with mdoc and get structured error feedback. Returns: success status, error count, and parsed error messages. Use this instead of running sbt directly to get reliable error parsing for iterative fixes.',
-    parameters: v.object({
+    input: v.object({
       paths: v.optional(v.array(v.string())),
     }),
-    execute: async (args: Record<string, any>) => {
-      const paths = args.paths as string[] | undefined;
+    run: async ({ input }) => {
+      const paths = input.paths;
 
       let command: string;
       if (!paths || paths.length === 0) {
@@ -66,12 +66,12 @@ export function createRunMdoc(projectRoot: string) {
         console.log(`[run_mdoc] Errors detected:\n${fullOutput}`);
       }
 
-      return JSON.stringify({
+      return {
         success,
         command,
         errorCount,
         errors: errorLines,
-      });
+      };
     },
   });
 }

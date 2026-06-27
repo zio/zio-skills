@@ -69,7 +69,7 @@ Node modules use `node:`. Named exports only.
 ```bash
 npm run build
 export ANTHROPIC_API_KEY=$(grep ANTHROPIC_API_KEY .env | cut -d= -f2)
-npx flue run crossref --target node --payload '{...}'
+npx flue run crossref --target node --input '{...}'
 ```
 
 ### Background (Non-blocking)
@@ -80,7 +80,7 @@ For long-running workflows (autopilot, verify-and-fix), run in background:
 
 ```bash
 nohup npx flue run crossref --target node \
-  --payload '{"docsDir":"/path/to/docs","mode":"autopilot"}' > workflow.log 2>&1 &
+  --input '{"docsDir":"/path/to/docs","mode":"autopilot"}' > workflow.log 2>&1 &
 ```
 
 **screen (persistent):**
@@ -89,7 +89,7 @@ nohup npx flue run crossref --target node \
 screen -S my-workflow
 npm run build
 export ANTHROPIC_API_KEY=$(grep ANTHROPIC_API_KEY .env | cut -d= -f2)
-npx flue run crossref --target node --payload '{...}'
+npx flue run crossref --target node --input '{...}'
 # Ctrl+A then D to detach
 # screen -r my-workflow to reattach
 ```

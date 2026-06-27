@@ -1,7 +1,6 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { spawnSync } from 'node:child_process';
-import docsWriterAgent from '../../agents/docs-writer.js';
 
 export type DocType = 'data-type-ref' | 'tutorial' | 'how-to-guide' | 'module-ref';
 
@@ -105,7 +104,7 @@ function getNamingNote(docType: DocType): string {
 }
 
 export async function runExamplesPhase(
-  init: any,
+  harness: any,
   options: RunExamplesOptions
 ): Promise<ExamplesPhaseResult> {
   const {
@@ -136,11 +135,9 @@ export async function runExamplesPhase(
   console.log(`  packageName:  ${packageName}`);
   if (parentModule) console.log(`  parentModule: ${parentModule}`);
 
-  // Acquire writer session — reuse caller's session if provided
   let session = existingSession;
   if (!session) {
-    const harness = await init(docsWriterAgent, { name: `examples-${moduleName}` });
-    session = await harness.session();
+    session = await harness.session(`examples-${moduleName}`);
   }
 
   // Phase A: Setup — create directory structure and wire sbt build files

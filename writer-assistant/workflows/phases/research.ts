@@ -1,4 +1,5 @@
-import type { FlueContext } from '@flue/runtime';
+// TODO: This phase needs docsResearcherAgent — a different agent from the calling workflow's primary.
+// Migration: accept FlueHarness for docsResearcherAgent once multi-agent pattern is resolved.
 import docsResearcherAgent from '../../agents/docs-researcher.js';
 
 export type ResearchFocus = 'data-type-ref' | 'tutorial' | 'guide' | 'explanation' | 'diagram';
@@ -20,7 +21,7 @@ export interface ResearchConfig {
  * The focus parameter customizes what insights to emphasize in the research output
  */
 export async function runResearchPhase(
-  init: FlueContext['init'],
+  harness: any, // TODO: should be FlueHarness for docsResearcherAgent once multi-agent migrated
   config: ResearchConfig
 ): Promise<string> {
   const { projectRoot, typeName, resolvedOutputPath, sourceDirs, dataTypeInfo, focus } = config;
@@ -63,8 +64,11 @@ Output: Structured research notes (not a formal report) that prepare the documen
   // Set environment variable for agent's sandbox cwd
   process.env.FLUE_PROJECT_ROOT = projectRoot;
 
-  const harness = await init(docsResearcherAgent, { name: 'docs-researcher' });
-  const session = await harness.session();
+  // TODO: harness here is the calling workflow's primary agent harness, NOT docsResearcherAgent.
+  // This will use the wrong agent until multi-agent migration is complete.
+  // Proper fix: accept a dedicated FlueHarness for docsResearcherAgent.
+  void docsResearcherAgent; // suppress unused import warning
+  const session = await harness.session('docs-researcher');
   const result = await session.prompt(prompt);
   return result.text || String(result);
 }

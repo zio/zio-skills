@@ -1,6 +1,5 @@
 import * as fs from 'node:fs';
-import type { FlueContext } from '@flue/runtime';
-import docsRedundancyFixerAgent from '../../agents/docs-redundancy-fixer.js';
+import type { FlueHarness } from '@flue/runtime';
 
 export interface ReduceRedundancyConfig {
   outputPath: string;
@@ -32,7 +31,7 @@ const DEFAULT_MAX_ROUNDS = 3;
  * The same session is reused across rounds to preserve fixer context.
  */
 export async function runReduceRedundancyPhase(
-  init: FlueContext['init'],
+  harness: FlueHarness,
   config: ReduceRedundancyConfig
 ): Promise<ReduceRedundancyResult> {
   const { outputPath, projectRoot, typeName } = config;
@@ -56,19 +55,13 @@ export async function runReduceRedundancyPhase(
 
   const unresolvable = new Set<string>();
 
-  // Reuse a single fixer session across all rounds for context continuity
-  const fixerHarness = await init(docsRedundancyFixerAgent, { name: 'docs-redundancy-fixer' });
-  const fixerSession = await fixerHarness.session();
+  const fixerSession = await harness.session('docs-redundancy-fixer');
 
   for (let round = 1; round <= maxRounds; round++) {
     result.rounds = round;
     console.log(`\n[ReduceRedundancy] Round ${round}/${maxRounds}: Scanning for redundancies...`);
 
-    // Phase A: Scan — fresh scanner each round to get unbiased findings
-    const scannerHarness = await init(docsRedundancyFixerAgent, {
-      name: `redundancy-scanner-round-${round}`,
-    });
-    const scannerSession = await scannerHarness.session();
+    const scannerSession = await harness.session(`redundancy-scanner-round-${round}`);
 
     const scanPrompt = `Scan the documentation file for redundancies.
 
@@ -162,9 +155,7 @@ Report each fix as one line:
     });
   }
 
-  // Final scan to report post-fix state
-  const finalHarness = await init(docsRedundancyFixerAgent, { name: 'redundancy-final-check' });
-  const finalSession = await finalHarness.session();
+  const finalSession = await harness.session('redundancy-final-check');
 
   const finalScanResult = await finalSession.prompt(
     `Scan ${outputPath} for any remaining redundancies using the docs-reduce-redundancy skill.\n\nReport each finding as:\n[REDUNDANCY] Type: <lexical|structural|semantic> | Section: <section-name> | <description>\n\nIf none found, output: No redundancies found.`

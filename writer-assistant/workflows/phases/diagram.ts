@@ -1,6 +1,6 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
-import type { FlueContext } from '@flue/runtime';
+// TODO: This phase needs diagramDesignerAgent — different from calling workflow's primary agent.
 import diagramDesignerAgent from '../../agents/diagram-designer.js';
 
 export interface DiagramConfig {
@@ -31,7 +31,7 @@ export interface DiagramResult {
  * then optionally patches the article MDX to add a ## Diagram section.
  */
 export async function runDiagramPhase(
-  init: FlueContext['init'],
+  harness: any, // TODO: should be FlueHarness for diagramDesignerAgent once multi-agent migrated
   config: DiagramConfig
 ): Promise<DiagramResult> {
   const {
@@ -94,8 +94,9 @@ Write the complete JSX file to the output path now.`;
 
   process.env.FLUE_PROJECT_ROOT = projectRoot;
 
-  const harness = await init(diagramDesignerAgent, { name: `diagram-designer-${typeName}` });
-  const designSession = await harness.session();
+  // TODO: harness is the calling workflow's agent — NOT diagramDesignerAgent.
+  void diagramDesignerAgent;
+  const designSession = await harness.session(`diagram-designer-${typeName}`);
 
   let designSuccess = false;
   try {

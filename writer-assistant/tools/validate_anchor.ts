@@ -9,22 +9,19 @@ export function createValidateAnchor(state: CrossrefState) {
     name: 'validate_anchor',
     description:
       'Check if an anchor/heading exists in a target page. Returns whether the anchor is available and lists all available headings.',
-    parameters: v.object({
+    input: v.object({
       pageId: v.string(),
       anchorText: v.string(),
     }),
-    execute: async (args: Record<string, any>) => {
-      const pageId = args.pageId as string;
-      const anchorText = args.anchorText as string;
+    run: async ({ input }) => {
+      const { pageId, anchorText } = input;
 
       console.log(`[validate_anchor] Checking anchor "${anchorText}" in page "${pageId}"`);
 
       const entry = state.index.find((e) => e.id === pageId);
       if (!entry) {
         console.log(`[validate_anchor] ERROR: Page "${pageId}" not found in index`);
-        return JSON.stringify({
-          error: `Page ${pageId} not found in index`,
-        });
+        return { error: `Page ${pageId} not found in index` };
       }
 
       try {
@@ -50,20 +47,15 @@ export function createValidateAnchor(state: CrossrefState) {
 
         console.log(`[validate_anchor] Anchor exists: ${found}`);
 
-        return JSON.stringify({
+        return {
           pageId,
           anchorText,
           exists: found,
-          availableHeadings: headings.map((h) => ({
-            text: h.text,
-            slug: h.slug,
-          })),
-        });
+          availableHeadings: headings.map((h) => ({ text: h.text, slug: h.slug })),
+        };
       } catch (e) {
         console.log(`[validate_anchor] ERROR reading page: ${e}`);
-        return JSON.stringify({
-          error: `Failed to read page: ${e}`,
-        });
+        return { error: `Failed to read page: ${e}` };
       }
     },
   });

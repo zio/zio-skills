@@ -1,7 +1,7 @@
 import 'dotenv/config.js';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
-import type { FlueContext } from '@flue/runtime';
+import { defineWorkflow } from '@flue/runtime';
 import docsWriterAgent from '../agents/docs-writer.js';
 import {
   toKebabCase,
@@ -84,14 +84,19 @@ function findRecentlyModifiedMarkdownFiles(
   return result;
 }
 
-export async function run({ init, payload }: FlueContext) {
+export default defineWorkflow({
+  agent: docsWriterAgent,
+  run: writeTutorialRun,
+});
+
+async function writeTutorialRun({ harness, input }: { harness: any; input: any }) {
   const {
     projectRoot,
     outputPath,
     topic,
     examples: examplesPayload,
     skipPhases = [],
-  } = payload as {
+  } = input as {
     projectRoot: string;
     outputPath: string;
     topic: string;
@@ -106,9 +111,9 @@ export async function run({ init, payload }: FlueContext) {
   };
 
   // Validate inputs
-  if (!projectRoot) throw new Error('payload.projectRoot is required');
-  if (!outputPath) throw new Error('payload.outputPath is required');
-  if (!topic) throw new Error('payload.topic is required');
+  if (!projectRoot) throw new Error('input.projectRoot is required');
+  if (!outputPath) throw new Error('input.outputPath is required');
+  if (!topic) throw new Error('input.topic is required');
 
   // Validate paths and resolve relative output path
   const resolvedOutputPath = validatePathsAndResolve(projectRoot, outputPath);
@@ -143,7 +148,7 @@ export async function run({ init, payload }: FlueContext) {
       phasesCompleted.push('research');
     } else {
       console.log('\n[Phase 1] Research: Understanding the topic...');
-      researchResult = await runResearchPhase(init, {
+      researchResult = await runResearchPhase(harness, {
         projectRoot,
         typeName: topic,
         resolvedOutputPath,
@@ -157,10 +162,9 @@ export async function run({ init, payload }: FlueContext) {
     // Phase 2-6: Initialize writer agent only if at least one of these phases will run
     const writerPhases = ['write', 'verify', 'integrate', 'review', 'style'];
     const needsWriterSession = writerPhases.some((p) => !skipPhases.includes(p));
-    let session: Awaited<ReturnType<Awaited<ReturnType<typeof init>>['session']>> | null = null;
+    let session: any = null;
     if (needsWriterSession) {
-      const harness = await init(docsWriterAgent, { name: 'docs-write-tutorial' });
-      session = await harness.session();
+      session = await harness.session('docs-write-tutorial');
     }
 
     // Phase 2: Write Documentation
@@ -227,7 +231,7 @@ Write the complete markdown file and save it to the specified output path.`;
         phasesCompleted.push('examples');
       } else {
         console.log('\n[Phase 2.5] Examples: Generating companion Scala examples...');
-        examplesResult = await runExamplesPhase(init, {
+        examplesResult = await runExamplesPhase(harness, {
           projectRoot,
           moduleName: examplesPayload.moduleName,
           packageName: examplesPayload.packageName,
@@ -357,7 +361,7 @@ Report final status and any updates made.`;
       phasesCompleted.push('review');
     } else {
       console.log('\n[Phase 5] Reviewing: Critique and fix loop...');
-      reviewResult = await runReviewPhase(init, {
+      reviewResult = await runReviewPhase(harness, {
         outputPath: resolvedOutputPath,
         projectRoot,
         typeName: topic,
@@ -386,7 +390,7 @@ Report final status and any updates made.`;
       phasesCompleted.push('style');
     } else {
       console.log('\n[Phase 6] Validating: Checking prose style...');
-      styleResult = await runStylePhase(init, {
+      styleResult = await runStylePhase(harness, {
         outputPath: resolvedOutputPath,
         projectRoot,
         typeName: topic,
@@ -435,8 +439,7 @@ Report final status and any updates made.`;
 
         // Ensure a writer session is available for fixing
         if (!session) {
-          const fixHarness = await init(docsWriterAgent, { name: 'fix-website-fixer' });
-          session = await fixHarness.session();
+          session = await harness.session('fix-website-fixer');
         }
 
         let round = 0;

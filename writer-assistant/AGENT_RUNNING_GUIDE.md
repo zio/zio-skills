@@ -6,7 +6,7 @@ To run the agent on a specific file:
 
 ```bash
 export ANTHROPIC_API_KEY=$(grep ANTHROPIC_API_KEY .env | cut -d= -f2)
-npx flue run crossref --target node --payload '{"docsDir":"/path/to/docs","mode":"step","targetFile":"reference/resource/scopedref.md","batchSize":1}'
+npx flue run crossref --target node --input '{"docsDir":"/path/to/docs","mode":"step","targetFile":"reference/resource/scopedref.md","batchSize":1}'
 ```
 
 ## Running in Background
@@ -17,7 +17,7 @@ Long-running workflows (autopilot, verify-and-fix) should run in the background 
 
 ```bash
 nohup npx flue run crossref --target node \
-  --payload '{"docsDir":"/path/to/docs","mode":"autopilot"}' > crossref.log 2>&1 &
+  --input '{"docsDir":"/path/to/docs","mode":"autopilot"}' > crossref.log 2>&1 &
 ```
 
 Monitor progress:
@@ -35,7 +35,7 @@ screen -S writer-agent
 npm run build
 export ANTHROPIC_API_KEY=$(grep ANTHROPIC_API_KEY .env | cut -d= -f2)
 npx flue run crossref --target node \
-  --payload '{"docsDir":"/path/to/docs","mode":"autopilot"}'
+  --input '{"docsDir":"/path/to/docs","mode":"autopilot"}'
 
 # Detach: Ctrl+A then D
 # Reattach: screen -r writer-agent
@@ -46,7 +46,7 @@ npx flue run crossref --target node \
 ```bash
 systemd-run --user --scope -p MemoryLimit=2G \
   npx flue run crossref --target node \
-  --payload '{"docsDir":"/path/to/docs","mode":"autopilot"}'
+  --input '{"docsDir":"/path/to/docs","mode":"autopilot"}'
 ```
 
 ### Checking Background Process Status
@@ -73,7 +73,7 @@ tail -f nohup.out          # Monitor default log
 **Solution:** Use `npx` to run Flue CLI instead of global installation
 
 ```bash
-npx flue run crossref --target node --payload '{...}'
+npx flue run crossref --target node --input '{...}'
 ```
 
 ### ❌ Error: "Unknown workflow: workflows/crossref.ts"
@@ -82,10 +82,10 @@ npx flue run crossref --target node --payload '{...}'
 
 ```bash
 # ❌ Wrong
-npx flue run workflows/crossref.ts --target node --payload '{...}'
+npx flue run workflows/crossref.ts --target node --input '{...}'
 
 # ✅ Correct
-npx flue run crossref --target node --payload '{...}'
+npx flue run crossref --target node --input '{...}'
 ```
 
 ### ❌ Error: "No API key for provider: anthropic"
@@ -95,7 +95,7 @@ npx flue run crossref --target node --payload '{...}'
 ```bash
 # ✅ Correct way to read from .env and export
 export ANTHROPIC_API_KEY=$(grep ANTHROPIC_API_KEY .env | cut -d= -f2)
-npx flue run crossref --target node --payload '{...}'
+npx flue run crossref --target node --input '{...}'
 ```
 
 **Note:** Simply having `.env` file is not enough—Flue requires the environment variable to be exported.
@@ -128,35 +128,35 @@ export ANTHROPIC_API_KEY=$(grep ANTHROPIC_API_KEY .env | cut -d= -f2)
 
 ```bash
 npx flue run crossref --target node \
-  --payload '{"docsDir":"/path/to/docs","mode":"step","targetFile":"reference/resource/scopedref.md","batchSize":1}'
+  --input '{"docsDir":"/path/to/docs","mode":"step","targetFile":"reference/resource/scopedref.md","batchSize":1}'
 ```
 
 **Process the next batch (1 page):**
 
 ```bash
 npx flue run crossref --target node \
-  --payload '{"docsDir":"/path/to/docs","mode":"step","batchSize":1}'
+  --input '{"docsDir":"/path/to/docs","mode":"step","batchSize":1}'
 ```
 
 **Process all remaining pages (autopilot):**
 
 ```bash
 npx flue run crossref --target node \
-  --payload '{"docsDir":"/path/to/docs","mode":"autopilot"}'
+  --input '{"docsDir":"/path/to/docs","mode":"autopilot"}'
 ```
 
 **View coverage report:**
 
 ```bash
 npx flue run crossref --target node \
-  --payload '{"docsDir":"/path/to/docs","mode":"report"}'
+  --input '{"docsDir":"/path/to/docs","mode":"report"}'
 ```
 
 **Rebuild index from scratch:**
 
 ```bash
 npx flue run crossref --target node \
-  --payload '{"docsDir":"/path/to/docs","mode":"reindex"}'
+  --input '{"docsDir":"/path/to/docs","mode":"reindex"}'
 ```
 
 ## Payload Parameters Explained
@@ -244,7 +244,7 @@ export ANTHROPIC_API_KEY=$(grep ANTHROPIC_API_KEY .env | cut -d= -f2)
 
 # Run agent on specific file
 npx flue run crossref --target node \
-  --payload '{"docsDir":"/home/milad/sources/scala/zio-2.x-new/docs","mode":"step","targetFile":"reference/resource/scopedref.md","batchSize":1}'
+  --input '{"docsDir":"/home/milad/sources/scala/zio-2.x-new/docs","mode":"step","targetFile":"reference/resource/scopedref.md","batchSize":1}'
 ```
 
 **What happens:**
@@ -277,7 +277,7 @@ Discover and insert cross-references between documentation pages.
 Generate comprehensive API reference documentation from Scala source code.
 
 ```bash
-npx flue run write-data-type-ref --target node --payload '{
+npx flue run write-data-type-ref --target node --input '{
   "projectRoot": "/path/to/zio",
   "outputPath": "docs/reference/fiber.md",
   "dataTypePath": "core/shared/src/main/scala/zio/Fiber.scala"
@@ -291,7 +291,7 @@ npx flue run write-data-type-ref --target node --payload '{
 Create learning-oriented guides for newcomers.
 
 ```bash
-npx flue run write-tutorial --target node --payload '{
+npx flue run write-tutorial --target node --input '{
   "projectRoot": "/path/to/zio",
   "outputPath": "docs/guides/getting-started-with-fibers.md",
   "topic": "Getting Started with ZIO Fibers"
@@ -313,7 +313,7 @@ npx flue run write-tutorial --target node --payload '{
 Validate and fix prose style violations in a documentation file.
 
 ```bash
-npx flue run fix-writing-style --target node --payload '{
+npx flue run fix-writing-style --target node --input '{
   "filePath": "/path/to/docs/reference/fiber.md"
 }'
 ```
@@ -330,7 +330,7 @@ npx flue run fix-writing-style --target node --payload '{
 Remove lexical, structural, and semantic redundancy from a documentation file.
 
 ```bash
-npx flue run reduce-redundancy --target node --payload '{
+npx flue run reduce-redundancy --target node --input '{
   "filePath": "/path/to/docs/reference/chunk.md"
 }'
 ```
@@ -438,7 +438,7 @@ If build fails, fix TypeScript errors before running agent.
 
    ```bash
    npx flue run crossref --target node \
-     --payload '{"docsDir":"...","mode":"step","targetFile":"...","batchSize":1}'
+     --input '{"docsDir":"...","mode":"step","targetFile":"...","batchSize":1}'
    ```
 
 3. **Review suggestions before applying**
@@ -449,7 +449,7 @@ If build fails, fix TypeScript errors before running agent.
 
    ```bash
    npx flue run crossref --target node \
-     --payload '{"docsDir":"...","mode":"report"}'
+     --input '{"docsDir":"...","mode":"report"}'
    ```
 
 5. **Save API key securely**

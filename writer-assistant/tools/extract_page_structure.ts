@@ -9,20 +9,18 @@ export function createExtractPageStructure(state: CrossrefState) {
     name: 'extract_page_structure',
     description:
       'Extract the heading structure (table of contents) from a page. Shows all available anchors that can be linked to.',
-    parameters: v.object({
+    input: v.object({
       pageId: v.string(),
     }),
-    execute: async (args: Record<string, any>) => {
-      const pageId = args.pageId as string;
+    run: async ({ input }) => {
+      const { pageId } = input;
 
       console.log(`[extract_page_structure] Extracting structure for page "${pageId}"`);
 
       const entry = state.index.find((e) => e.id === pageId);
       if (!entry) {
         console.log(`[extract_page_structure] ERROR: Page "${pageId}" not found in index`);
-        return JSON.stringify({
-          error: `Page ${pageId} not found in index`,
-        });
+        return { error: `Page ${pageId} not found in index` };
       }
 
       try {
@@ -34,19 +32,14 @@ export function createExtractPageStructure(state: CrossrefState) {
         );
         console.log(`[extract_page_structure] Headings: ${headings.map((h) => h.text).join(', ')}`);
 
-        return JSON.stringify({
+        return {
           pageId,
           title: entry.title,
-          headings: headings.map((h) => ({
-            text: h.text,
-            slug: h.slug,
-          })),
-        });
+          headings: headings.map((h) => ({ text: h.text, slug: h.slug })),
+        };
       } catch (e) {
         console.log(`[extract_page_structure] ERROR reading page: ${e}`);
-        return JSON.stringify({
-          error: `Failed to read page: ${e}`,
-        });
+        return { error: `Failed to read page: ${e}` };
       }
     },
   });

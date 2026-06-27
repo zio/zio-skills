@@ -1,7 +1,8 @@
 import 'dotenv/config.js';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
-import type { FlueContext } from '@flue/runtime';
+import { defineWorkflow } from '@flue/runtime';
+import docsRedundancyFixerAgent from '../agents/docs-redundancy-fixer.js';
 import { runReduceRedundancyPhase } from './phases/reduce-redundancy.js';
 import { verifyBuild } from './phases/verify.js';
 
@@ -12,18 +13,23 @@ function inferDocsDir(filePath: string): string | null {
   return parts.slice(0, docsIdx + 1).join(path.sep);
 }
 
-export async function run({ init, payload }: FlueContext) {
+export default defineWorkflow({
+  agent: docsRedundancyFixerAgent,
+  run: reduceRedundancyRun,
+});
+
+async function reduceRedundancyRun({ harness, input }: { harness: any; input: any }) {
   const {
     filePath,
     typeName: typeNameInput,
     maxRounds,
-  } = payload as {
+  } = input as {
     filePath: string;
     typeName?: string;
     maxRounds?: number;
   };
 
-  if (!filePath) throw new Error('payload.filePath is required');
+  if (!filePath) throw new Error('input.filePath is required');
   if (!fs.existsSync(filePath)) throw new Error(`File not found: ${filePath}`);
 
   const typeName = typeNameInput || path.basename(filePath, '.md');
@@ -36,7 +42,7 @@ export async function run({ init, payload }: FlueContext) {
   try {
     // Phase 1: Scan and fix redundancies
     console.log('\n[Phase 1] Redundancy Reduction: Scanning and fixing...');
-    const redundancyResult = await runReduceRedundancyPhase(init, {
+    const redundancyResult = await runReduceRedundancyPhase(harness, {
       outputPath: filePath,
       projectRoot: path.dirname(filePath),
       typeName,

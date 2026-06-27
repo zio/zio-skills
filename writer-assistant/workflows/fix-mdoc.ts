@@ -1,6 +1,6 @@
 import 'dotenv/config.js';
 import * as fs from 'node:fs';
-import type { FlueContext } from '@flue/runtime';
+import { defineWorkflow } from '@flue/runtime';
 import docsWriterAgent from '../agents/docs-writer.js';
 import { createRunMdoc } from '../tools/run_mdoc.js';
 import {
@@ -22,18 +22,23 @@ export interface FixMdocResult {
 
 const DEFAULT_MAX_ROUNDS = 3;
 
-export async function run({ init, payload }: FlueContext) {
+export default defineWorkflow({
+  agent: docsWriterAgent,
+  run: fixMdocRun,
+});
+
+async function fixMdocRun({ harness, input }: { harness: any; input: any }) {
   const {
     projectRoot,
     paths: rawPaths,
     maxRounds: inputMaxRounds,
-  } = payload as {
+  } = input as {
     projectRoot: string;
     paths?: string | string[];
     maxRounds?: number;
   };
 
-  if (!projectRoot) throw new Error('payload.projectRoot is required');
+  if (!projectRoot) throw new Error('input.projectRoot is required');
   if (!fs.existsSync(projectRoot)) throw new Error(`projectRoot not found: ${projectRoot}`);
 
   const maxRounds = inputMaxRounds ?? DEFAULT_MAX_ROUNDS;
@@ -82,9 +87,7 @@ export async function run({ init, payload }: FlueContext) {
 
   console.log(`[fix-mdoc] Found ${currentErrors.length} error(s), starting fix loop`);
 
-  // Initialize writer session for fixer
-  const harness = await init(docsWriterAgent, { name: 'fix-mdoc-fixer' });
-  const session = await harness.session();
+  const session = await harness.session('fix-mdoc-fixer');
 
   // Phase 2+: Fix loop
   for (round = 1; round <= maxRounds; round++) {

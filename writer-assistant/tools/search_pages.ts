@@ -7,13 +7,13 @@ export function createSearchPages(state: CrossrefState) {
     name: 'search_pages',
     description:
       'Search the documentation index for pages by title, keywords, or topic. Returns matching pages ranked by relevance.',
-    parameters: v.object({
+    input: v.object({
       query: v.string(),
       limit: v.optional(v.number()),
     }),
-    execute: async (args: Record<string, any>) => {
-      const query = (args.query as string).toLowerCase();
-      const limit = (args.limit as number | undefined) ?? 5;
+    run: async ({ input }) => {
+      const query = input.query.toLowerCase();
+      const limit = input.limit ?? 5;
 
       console.log(`[search_pages] Searching for "${query}" (limit: ${limit})`);
 
@@ -68,11 +68,11 @@ export function createSearchPages(state: CrossrefState) {
         `[search_pages] Found ${results.length} results: ${results.map((r) => `${r.title} (score: ${r.score})`).join(', ')}`
       );
 
-      return JSON.stringify({
+      return {
         query,
         resultsCount: results.length,
         results,
-      });
+      };
     },
   });
 }

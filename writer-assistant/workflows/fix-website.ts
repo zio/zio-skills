@@ -1,7 +1,7 @@
 import 'dotenv/config.js';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
-import type { FlueContext } from '@flue/runtime';
+import { defineWorkflow } from '@flue/runtime';
 import docsWriterAgent from '../agents/docs-writer.js';
 import { runBuild } from '../lib/build-runner.js';
 
@@ -60,18 +60,23 @@ function parseWebsiteBuildErrors(output: string): string[] {
   return errors;
 }
 
-export async function run({ init, payload }: FlueContext) {
+export default defineWorkflow({
+  agent: docsWriterAgent,
+  run: fixWebsiteRun,
+});
+
+async function fixWebsiteRun({ harness, input }: { harness: any; input: any }) {
   const {
     projectRoot,
     docsDir: inputDocsDir,
     maxRounds: inputMaxRounds,
-  } = payload as {
+  } = input as {
     projectRoot: string;
     docsDir?: string;
     maxRounds?: number;
   };
 
-  if (!projectRoot) throw new Error('payload.projectRoot is required');
+  if (!projectRoot) throw new Error('input.projectRoot is required');
   if (!fs.existsSync(projectRoot)) throw new Error(`projectRoot not found: ${projectRoot}`);
 
   const maxRounds = inputMaxRounds ?? DEFAULT_MAX_ROUNDS;
@@ -133,9 +138,7 @@ export async function run({ init, payload }: FlueContext) {
     };
   }
 
-  // Initialize writer session for fixer
-  const harness = await init(docsWriterAgent, { name: 'fix-website-fixer' });
-  const session = await harness.session();
+  const session = await harness.session('fix-website-fixer');
 
   // Phase 2+: Fix loop
   for (round = 1; round <= maxRounds; round++) {

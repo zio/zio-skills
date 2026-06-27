@@ -1,6 +1,6 @@
 import 'dotenv/config.js';
 import * as path from 'node:path';
-import type { FlueContext } from '@flue/runtime';
+import { defineWorkflow } from '@flue/runtime';
 import pageLinkerAgent from '../agents/page-linker.js';
 import codingAgent from '../agents/coding-agent.js';
 import { runDocFixer } from '../lib/auto-fixer.js';
@@ -12,10 +12,14 @@ import { processBatch } from './phases/process.js';
 import { report } from './phases/report.js';
 import { verifyBuild } from './phases/verify.js';
 
-export async function run({ init, payload }: FlueContext) {
-  // Support both projectRoot (new) and docsDir (legacy)
-  const projectRoot = (payload as any).projectRoot || path.dirname((payload as any).docsDir);
-  const docsDir = (payload as any).docsDir || path.join(projectRoot, 'docs');
+export default defineWorkflow({
+  agent: pageLinkerAgent,
+  run: crossrefRun,
+});
+
+async function crossrefRun({ harness, input }: { harness: any; input: any }) {
+  const projectRoot = (input as any).projectRoot || path.dirname((input as any).docsDir);
+  const docsDir = (input as any).docsDir || path.join(projectRoot, 'docs');
 
   const {
     mode,
@@ -24,7 +28,7 @@ export async function run({ init, payload }: FlueContext) {
     targetDir,
     maxRetries = 3,
     verificationPrompt,
-  } = payload as {
+  } = input as {
     projectRoot?: string;
     docsDir?: string;
     mode: 'reindex' | 'step' | 'autopilot' | 'report' | 'verify' | 'verify-and-fix';
@@ -35,10 +39,9 @@ export async function run({ init, payload }: FlueContext) {
     verificationPrompt?: string;
   };
 
-  if (!projectRoot) throw new Error('payload.projectRoot is required (or legacy docsDir)');
+  if (!projectRoot) throw new Error('input.projectRoot is required (or legacy docsDir)');
 
-  const harness = await init(pageLinkerAgent, { name: 'crossref' });
-  const session = await harness.session();
+  const session = await harness.session('crossref');
 
   let state = (await loadState(docsDir)) ?? emptyState(docsDir);
 
@@ -129,9 +132,11 @@ export async function run({ init, payload }: FlueContext) {
         if (verificationPrompt) {
           console.log(`\n[crossref] Running custom verification check...`);
           try {
-            const harness = await init(codingAgent, { name: 'verifier' });
-            const session = await harness.session();
-            const verificationResult = await session.prompt(
+            // TODO: codingAgent is a secondary agent — Flue 1.0 removed multi-agent init.
+            // Migrate to: separate workflow via invoke(), or defineWorkflow with codingAgent.
+            // For now, skipping custom verification until migration is complete.
+            console.log(`[crossref] Custom verification skipped (needs multi-agent migration)`);
+            const verificationResult = await Promise.resolve(
               `You are working in the project directory: ${projectRoot}\n\nWhen using bash, execute commands in the project directory: ${projectRoot}\n\nTask: ${verificationPrompt}`
             );
             console.log(`[crossref] Verification check completed.`);

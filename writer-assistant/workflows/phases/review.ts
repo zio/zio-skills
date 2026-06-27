@@ -1,5 +1,5 @@
 import * as fs from 'node:fs';
-import type { FlueContext } from '@flue/runtime';
+// TODO: This phase needs docsReviewerAgent — a different agent from the calling workflow's primary.
 import docsReviewerAgent from '../../agents/docs-reviewer.js';
 
 export interface ReviewConfig {
@@ -26,7 +26,7 @@ const MAX_ROUNDS = 5;
  * Iterates until HIGH + MEDIUM findings reach zero or MAX_ROUNDS is reached
  */
 export async function runReviewPhase(
-  init: FlueContext['init'],
+  harness: any, // TODO: should be FlueHarness for docsReviewerAgent once multi-agent migrated
   config: ReviewConfig
 ): Promise<ReviewResult> {
   const { outputPath, projectRoot, typeName, session, sourceFiles = [], relatedDocs = [] } = config;
@@ -52,9 +52,9 @@ export async function runReviewPhase(
     result.rounds = round;
     console.log(`\n[Phase 5] Round ${round}/${MAX_ROUNDS}: Spawning critic...`);
 
-    // Phase A: Spawn fresh critic
-    const harness = await init(docsReviewerAgent, { name: `docs-reviewer-round-${round}` });
-    const criticSession = await harness.session();
+    // TODO: docsReviewerAgent is a different agent — harness here is the calling workflow's primary.
+    void docsReviewerAgent;
+    const criticSession = await harness.session(`docs-reviewer-round-${round}`);
 
     // Build critic prompt
     const sourceFilesList =

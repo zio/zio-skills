@@ -149,19 +149,19 @@ Optionally create `.crossref-config.json` in the parent of your docs directory:
 ```bash
 # Build fresh index
 npx flue run crossref --target node \
-  --payload '{"docsDir":"./docs","mode":"reindex"}'
+  --input '{"docsDir":"./docs","mode":"reindex"}'
 
 # Process pages one at a time
 npx flue run crossref --target node \
-  --payload '{"docsDir":"./docs","mode":"step","batchSize":1}'
+  --input '{"docsDir":"./docs","mode":"step","batchSize":1}'
 
 # Process all remaining pages
 npx flue run crossref --target node \
-  --payload '{"docsDir":"./docs","mode":"autopilot"}'
+  --input '{"docsDir":"./docs","mode":"autopilot"}'
 
 # View coverage report
 npx flue run crossref --target node \
-  --payload '{"docsDir":"./docs","mode":"report"}'
+  --input '{"docsDir":"./docs","mode":"report"}'
 ```
 
 ### Write Data Type Reference
@@ -169,7 +169,7 @@ npx flue run crossref --target node \
 Generate comprehensive API reference documentation from source code:
 
 ```bash
-npx flue run write-data-type-ref --target node --payload '{
+npx flue run write-data-type-ref --target node --input '{
   "projectRoot": "/path/to/zio-repo",
   "outputPath": "docs/reference/fiber.md",
   "dataTypePath": "core/shared/src/main/scala/zio/Fiber.scala"
@@ -179,7 +179,7 @@ npx flue run write-data-type-ref --target node --payload '{
 To also generate companion Scala examples (Phase 2.5), add the `examples` field:
 
 ```bash
-npx flue run write-data-type-ref --target node --payload '{
+npx flue run write-data-type-ref --target node --input '{
   "projectRoot": "/path/to/zio-repo",
   "outputPath": "docs/reference/fiber.md",
   "dataTypePath": "core/shared/src/main/scala/zio/Fiber.scala",
@@ -194,7 +194,7 @@ npx flue run write-data-type-ref --target node --payload '{
 Create learning-oriented guides for newcomers:
 
 ```bash
-npx flue run write-tutorial --target node --payload '{
+npx flue run write-tutorial --target node --input '{
   "projectRoot": "/path/to/zio-repo",
   "outputPath": "docs/guides/getting-started-with-fibers.md",
   "topic": "Getting Started with ZIO Fibers"
@@ -204,7 +204,7 @@ npx flue run write-tutorial --target node --payload '{
 To also generate companion Scala examples (Phase 2.5), add the `examples` field:
 
 ```bash
-npx flue run write-tutorial --target node --payload '{
+npx flue run write-tutorial --target node --input '{
   "projectRoot": "/path/to/zio-repo",
   "outputPath": "docs/guides/getting-started-with-fibers.md",
   "topic": "Getting Started with ZIO Fibers",
@@ -217,7 +217,7 @@ npx flue run write-tutorial --target node --payload '{
 To re-run only specific phases (e.g. debug a build failure without repeating research/write), use `skipPhases`:
 
 ```bash
-npx flue run write-tutorial --target node --payload '{
+npx flue run write-tutorial --target node --input '{
   "projectRoot": "/path/to/zio-repo",
   "outputPath": "docs/guides/getting-started-with-fibers.md",
   "topic": "Getting Started with ZIO Fibers",
@@ -242,7 +242,7 @@ Tutorials follow a 7-section structure:
 Generate companion Scala example sub-modules for documentation. Can be run standalone or triggered automatically via `write-data-type-ref` and `write-tutorial` with the `examples` payload field.
 
 ```bash
-npx flue run write-examples --target node --payload '{
+npx flue run write-examples --target node --input '{
   "projectRoot": "/path/to/zio-repo",
   "moduleName": "zio-http-example-fiber",
   "topic": "ZIO Fiber lifecycle management",
@@ -272,12 +272,12 @@ Start a live documentation dev server. The server runs in the background — the
 
 ```bash
 # Start preview immediately (no mdoc recompile)
-npx flue run preview-website --target node --payload '{
+npx flue run preview-website --target node --input '{
   "projectRoot": "/path/to/zio-repo"
 }'
 
 # Recompile mdoc first, then start preview
-npx flue run preview-website --target node --payload '{
+npx flue run preview-website --target node --input '{
   "projectRoot": "/path/to/zio-repo",
   "runMdoc": true
 }'
@@ -293,12 +293,12 @@ Verify the full documentation website builds successfully. Read-only.
 
 ```bash
 # Check website only
-npx flue run check-website --target node --payload '{
+npx flue run check-website --target node --input '{
   "projectRoot": "/path/to/zio-repo"
 }'
 
 # Run sbt docs/mdoc first, then check website
-npx flue run check-website --target node --payload '{
+npx flue run check-website --target node --input '{
   "projectRoot": "/path/to/zio-repo",
   "runMdoc": true
 }'
@@ -312,25 +312,25 @@ Check and validate mdoc code blocks without running a full workflow. Accepts a s
 
 ```bash
 # Single file
-npx flue run check-mdoc --target node --payload '{
+npx flue run check-mdoc --target node --input '{
   "projectRoot": "/path/to/zio-repo",
   "paths": "docs/reference/fiber.md"
 }'
 
 # Multiple files
-npx flue run check-mdoc --target node --payload '{
+npx flue run check-mdoc --target node --input '{
   "projectRoot": "/path/to/zio-repo",
   "paths": ["docs/reference/fiber.md", "docs/reference/chunk.md"]
 }'
 
 # Entire directory (walks subdirectories)
-npx flue run check-mdoc --target node --payload '{
+npx flue run check-mdoc --target node --input '{
   "projectRoot": "/path/to/zio-repo",
   "paths": ["docs/reference/concurrency/"]
 }'
 
 # Entire docs project
-npx flue run check-mdoc --target node --payload '{
+npx flue run check-mdoc --target node --input '{
   "projectRoot": "/path/to/zio-repo"
 }'
 ```
@@ -343,20 +343,20 @@ Check and automatically fix mdoc code blocks. Same input as `check-mdoc`, but sp
 
 ```bash
 # Fix single file with auto-retry (up to 3 rounds)
-npx flue run fix-mdoc --target node --payload '{
+npx flue run fix-mdoc --target node --input '{
   "projectRoot": "/path/to/zio-repo",
   "paths": "docs/reference/fiber.md"
 }'
 
 # Fix directory with custom max rounds
-npx flue run fix-mdoc --target node --payload '{
+npx flue run fix-mdoc --target node --input '{
   "projectRoot": "/path/to/zio-repo",
   "paths": ["docs/reference/concurrency/"],
   "maxRounds": 5
 }'
 
 # Fix entire docs project
-npx flue run fix-mdoc --target node --payload '{
+npx flue run fix-mdoc --target node --input '{
   "projectRoot": "/path/to/zio-repo",
   "maxRounds": 3
 }'
@@ -428,7 +428,7 @@ Discovers all documentation files and classifies them by section type.
 
 ```bash
 flue run workflows/crossref.ts --target node \
-  --payload '{"docsDir":"./docs","mode":"reindex"}'
+  --input '{"docsDir":"./docs","mode":"reindex"}'
 ```
 
 **Output:**
@@ -445,28 +445,28 @@ Analyzes unprocessed pages and applies high-confidence links.
 
 ```bash
 flue run crossref --target node \
-  --payload '{"docsDir":"./docs","mode":"step","batchSize":1}'
+  --input '{"docsDir":"./docs","mode":"step","batchSize":1}'
 ```
 
 **Process next unprocessed page:**
 
 ```bash
 flue run crossref --target node \
-  --payload '{"docsDir":"./docs","mode":"step"}'
+  --input '{"docsDir":"./docs","mode":"step"}'
 ```
 
 **Process a specific target file:**
 
 ```bash
 flue run crossref --target node \
-  --payload '{"docsDir":"./docs","mode":"step","targetFile":"reference/fiber/fiber.md"}'
+  --input '{"docsDir":"./docs","mode":"step","targetFile":"reference/fiber/fiber.md"}'
 ```
 
 **Process all files in a directory (recursively):**
 
 ```bash
 flue run crossref --target node \
-  --payload '{"docsDir":"./docs","mode":"step","targetDir":"reference/fiber/","batchSize":5}'
+  --input '{"docsDir":"./docs","mode":"step","targetDir":"reference/fiber/","batchSize":5}'
 ```
 
 **Output per page:**
@@ -500,7 +500,7 @@ Loops `step` mode until complete.
 
 ```bash
 flue run workflows/crossref.ts --target node \
-  --payload '{"docsDir":"./docs","mode":"autopilot"}'
+  --input '{"docsDir":"./docs","mode":"autopilot"}'
 ```
 
 **Output:**
@@ -514,7 +514,7 @@ Shows link density, orphan detection, and suggestion breakdown.
 
 ```bash
 flue run workflows/crossref.ts --target node \
-  --payload '{"docsDir":"./docs","mode":"report"}'
+  --input '{"docsDir":"./docs","mode":"report"}'
 ```
 
 **Output includes:**
@@ -531,7 +531,7 @@ Verifies that the documentation builds successfully after cross-reference additi
 
 ```bash
 flue run workflows/crossref.ts --target node \
-  --payload '{"docsDir":"./docs","mode":"verify"}'
+  --input '{"docsDir":"./docs","mode":"verify"}'
 ```
 
 **Purpose:**
@@ -556,11 +556,11 @@ flue run workflows/crossref.ts --target node \
 ```bash
 # Step 1: Add cross-references
 flue run crossref --target node \
-  --payload '{"docsDir":"./docs","mode":"autopilot"}'
+  --input '{"docsDir":"./docs","mode":"autopilot"}'
 
 # Step 2: Verify docs still build
 flue run crossref --target node \
-  --payload '{"docsDir":"./docs","mode":"verify"}'
+  --input '{"docsDir":"./docs","mode":"verify"}'
 ```
 
 The verify mode is particularly useful in CI/CD pipelines to catch broken links and other build issues before merging documentation changes.
@@ -571,7 +571,7 @@ Automatically fixes documentation build failures and re-validates until success.
 
 ```bash
 npm exec -- flue run crossref --target node \
-  --payload '{
+  --input '{
     "projectRoot":"/path/to/project",
     "mode":"verify-and-fix",
     "maxRetries":3
@@ -609,11 +609,11 @@ npm exec -- flue run crossref --target node \
 ```bash
 # Step 1: Add cross-references
 npm exec -- flue run crossref --target node \
-  --payload '{"projectRoot":".","mode":"autopilot"}'
+  --input '{"projectRoot":".","mode":"autopilot"}'
 
 # Step 2: Verify and auto-fix any failures
 npm exec -- flue run crossref --target node \
-  --payload '{
+  --input '{
     "projectRoot":".",
     "mode":"verify-and-fix",
     "maxRetries":3
@@ -651,7 +651,7 @@ For best results, run metadata extraction once before starting cross-reference p
 ```bash
 # Extract metadata for all pages (comprehensive)
 flue run extract-metadata --target node \
-  --payload '{"docsDir":"./docs","mode":"all"}'
+  --input '{"docsDir":"./docs","mode":"all"}'
 ```
 
 This pre-enrichment approach:
@@ -674,11 +674,11 @@ Once metadata is extracted, run the crossref workflow normally:
 ```bash
 # Build index (will use extracted metadata)
 flue run workflows/crossref.ts --target node \
-  --payload '{"docsDir":"./docs","mode":"reindex"}'
+  --input '{"docsDir":"./docs","mode":"reindex"}'
 
 # Process pages with rich metadata context
 flue run workflows/crossref.ts --target node \
-  --payload '{"docsDir":"./docs","mode":"autopilot"}'
+  --input '{"docsDir":"./docs","mode":"autopilot"}'
 ```
 
 The writer-assistant automatically uses extracted metadata (descriptions, keywords) to make smarter linking decisions.
@@ -690,7 +690,7 @@ If you skip pre-enrichment, the writer-assistant will extract metadata on-demand
 ```bash
 # Run without pre-enrichment (metadata extracted per-page)
 flue run extract-metadata --target node \
-  --payload '{"docsDir":"./docs","mode":"missing"}'
+  --input '{"docsDir":"./docs","mode":"missing"}'
 ```
 
 This fallback approach:
@@ -719,14 +719,14 @@ This fallback approach:
 
 ```bash
 flue run extract-metadata --target node \
-  --payload '{"docsDir":"./docs","mode":"file","targetFile":"guides/getting-started.md"}'
+  --input '{"docsDir":"./docs","mode":"file","targetFile":"guides/getting-started.md"}'
 ```
 
 **Example: Extract entire directory recursively**
 
 ```bash
 flue run extract-metadata --target node \
-  --payload '{"docsDir":"./docs","targetDir":"guides/","mode":"all"}'
+  --input '{"docsDir":"./docs","targetDir":"guides/","mode":"all"}'
 ```
 
 This extracts metadata for all `.md` and `.mdx` files in the `guides/` directory and all subdirectories, without touching other documentation sections.
@@ -995,16 +995,16 @@ EOF
 
 # Run workflow
 flue run workflows/crossref.ts --target node \
-  --payload '{"docsDir":"/tmp/test-docs","mode":"reindex"}'
+  --input '{"docsDir":"/tmp/test-docs","mode":"reindex"}'
 
 # Process pages
 flue run workflows/crossref.ts --target node \
-  --payload '{"docsDir":"/tmp/test-docs","mode":"autopilot"}'
+  --input '{"docsDir":"/tmp/test-docs","mode":"autopilot"}'
 
 # View results
 cat /tmp/test-docs/guides/getting-started.md
 flue run workflows/crossref.ts --target node \
-  --payload '{"docsDir":"/tmp/test-docs","mode":"report"}'
+  --input '{"docsDir":"/tmp/test-docs","mode":"report"}'
 ```
 
 ## Performance Notes
@@ -1062,5 +1062,5 @@ For issues or questions:
 
 ```bash
 flue run workflows/crossref.ts --target node \
-  --payload '{"docsDir":"./docs","mode":"autopilot"}'
+  --input '{"docsDir":"./docs","mode":"autopilot"}'
 ```

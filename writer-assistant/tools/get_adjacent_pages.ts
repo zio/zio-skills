@@ -7,20 +7,18 @@ export function createGetAdjacentPages(state: CrossrefState) {
     name: 'get_adjacent_pages',
     description:
       'Get all pages in the same documentation section. Adjacent pages are strong candidates for See Also links.',
-    parameters: v.object({
+    input: v.object({
       pageId: v.string(),
     }),
-    execute: async (args: Record<string, any>) => {
-      const pageId = args.pageId as string;
+    run: async ({ input }) => {
+      const { pageId } = input;
 
       console.log(`[get_adjacent_pages] Getting adjacent pages for "${pageId}"`);
 
       const entry = state.index.find((e) => e.id === pageId);
       if (!entry) {
         console.log(`[get_adjacent_pages] ERROR: Page "${pageId}" not found in index`);
-        return JSON.stringify({
-          error: `Page ${pageId} not found in index`,
-        });
+        return { error: `Page ${pageId} not found in index` };
       }
 
       const adjacentPages = entry.adjacentPages || [];
@@ -42,12 +40,12 @@ export function createGetAdjacentPages(state: CrossrefState) {
         `[get_adjacent_pages] Resolved ${adjacentEntries.length} adjacent pages: ${adjacentEntries.map((e) => e.title).join(', ')}`
       );
 
-      return JSON.stringify({
+      return {
         pageId,
         title: entry.title,
         adjacentCount: adjacentEntries.length,
         adjacent: adjacentEntries,
-      });
+      };
     },
   });
 }

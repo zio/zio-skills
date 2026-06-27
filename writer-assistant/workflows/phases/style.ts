@@ -1,7 +1,7 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { execSync } from 'node:child_process';
-import type { FlueContext } from '@flue/runtime';
+// TODO: docsStyleCheckerAgent is a different agent from the calling workflow's primary.
 import docsStyleCheckerAgent from '../../agents/docs-style-checker.js';
 
 export interface StyleConfig {
@@ -9,7 +9,7 @@ export interface StyleConfig {
   projectRoot: string;
   typeName: string;
   session: any; // AgentSession reused from writer for fixes
-  init?: FlueContext['init']; // optional: for spawning LLM style checker agent
+  init?: any; // TODO: was FlueContext['init'] — now accepts harness or undefined
   maxRounds?: number; // check+fix passes (default 1)
 }
 
@@ -115,7 +115,7 @@ function runMechanicalCheck(outputPath: string, projectRoot: string): string {
  * After the final round, a mechanical re-check reports the post-fix state.
  */
 export async function runStylePhase(
-  init: FlueContext['init'],
+  harness: any, // TODO: was FlueContext['init'] — passes harness for LLM style checker
   config: StyleConfig
 ): Promise<StyleResult> {
   const { outputPath, projectRoot, typeName, session, init: initForAgent } = config;
@@ -162,15 +162,14 @@ export async function runStylePhase(
     console.log(`  [Mechanical] Found ${mechanicalLines.length} violation(s)`);
     logRuleCounts(countByRule(mechanicalLines));
 
-    // Phase B: LLM-based judgment check (if init is available)
+    // Phase B: LLM-based judgment check (if harness is available)
     let llmLines: string[] = [];
 
     if (initForAgent) {
       try {
-        const checkerHarness = await initForAgent(docsStyleCheckerAgent, {
-          name: `docs-style-checker-round-${round}`,
-        });
-        const checkerSession = await checkerHarness.session();
+        // TODO: docsStyleCheckerAgent is a different agent — harness here is the calling workflow's primary.
+        void docsStyleCheckerAgent;
+        const checkerSession = await initForAgent.session(`docs-style-checker-round-${round}`);
 
         const checkerPrompt = `Review the documentation file for prose style rule violations:
 

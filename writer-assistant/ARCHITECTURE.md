@@ -837,15 +837,15 @@ ANTHROPIC_API_KEY=sk-ant-...  # Required for all workflows
 ```bash
 # Build index
 flue run crossref --target node \
-  --payload '{"docsDir":"./docs","mode":"reindex"}'
+  --input '{"docsDir":"./docs","mode":"reindex"}'
 
 # Process incrementally
 flue run crossref --target node \
-  --payload '{"docsDir":"./docs","mode":"autopilot"}'
+  --input '{"docsDir":"./docs","mode":"autopilot"}'
 
 # Generate reference docs
 flue run write-data-type-ref --target node \
-  --payload '{"projectRoot":".","outputPath":"docs/ref.md"}'
+  --input '{"projectRoot":".","outputPath":"docs/ref.md"}'
 ```
 
 ## 10. Security Considerations

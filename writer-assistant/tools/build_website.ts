@@ -1,5 +1,4 @@
 import { defineTool } from '@flue/runtime';
-import * as v from 'valibot';
 import { execSync } from 'node:child_process';
 
 export function createBuildWebsite(projectRoot: string) {
@@ -7,8 +6,7 @@ export function createBuildWebsite(projectRoot: string) {
     name: 'build_website',
     description:
       'Build the Docusaurus website and get structured error feedback. Returns: success status, error count, and parsed error messages. Use this after run_mdoc passes to catch broken doc IDs, missing sidebar entries, and broken links before committing.',
-    parameters: v.object({}),
-    execute: async (_args: Record<string, any>) => {
+    run: async () => {
       const command = 'yarn build';
 
       console.log(`[build_website] Executing: ${command} in ${projectRoot}/website`);
@@ -46,12 +44,12 @@ export function createBuildWebsite(projectRoot: string) {
         console.log(`[build_website] Errors detected:\n${fullOutput}`);
       }
 
-      return JSON.stringify({
+      return {
         success,
         command,
         errorCount,
         errors: errorLines,
-      });
+      };
     },
   });
 }

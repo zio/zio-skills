@@ -1,7 +1,6 @@
 import 'dotenv/config.js';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
-import type { FlueContext } from '@flue/runtime';
 import { runBuild } from '../lib/build-runner.js';
 
 export interface CheckWebsiteResult {
@@ -62,19 +61,20 @@ function parseWebsiteBuildErrors(output: string): string[] {
   return errors;
 }
 
-export async function run({ payload }: FlueContext) {
+// TODO: defineWorkflow requires an agent — assign one when migrating fully to Flue 1.0
+export async function run({ input }: { input: any }) {
   const {
     projectRoot,
     docsDir: inputDocsDir,
     runMdoc = false,
-  } = payload as {
+  } = input as {
     projectRoot: string;
     docsDir?: string;
     /** Run `sbt docs/mdoc` before checking the website. Default: false. */
     runMdoc?: boolean;
   };
 
-  if (!projectRoot) throw new Error('payload.projectRoot is required');
+  if (!projectRoot) throw new Error('input.projectRoot is required');
   if (!fs.existsSync(projectRoot)) throw new Error(`projectRoot not found: ${projectRoot}`);
 
   const docsDir = inputDocsDir

@@ -1,7 +1,7 @@
-import { createAgent } from '@flue/runtime';
+import { defineAgent } from '@flue/runtime';
 import { local } from '@flue/runtime/node';
 
-export default createAgent(() => ({
+export default defineAgent(() => ({
   model: 'anthropic/claude-haiku-4-5-20251001',
   sandbox: local({ cwd: process.env.FLUE_PROJECT_ROOT || process.cwd() }),
   instructions: `You are a technical documentation critic specializing in ZIO library documentation.

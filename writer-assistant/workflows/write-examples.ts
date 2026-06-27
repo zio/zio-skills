@@ -1,6 +1,7 @@
 import 'dotenv/config.js';
 import * as fs from 'node:fs';
-import type { FlueContext } from '@flue/runtime';
+import { defineWorkflow } from '@flue/runtime';
+import docsWriterAgent from '../agents/docs-writer.js';
 import { runExamplesPhase, type DocType } from './phases/examples.js';
 
 export type { DocType };
@@ -20,9 +21,14 @@ export interface WriteExamplesResult {
   durationMs: number;
 }
 
-export async function run({ init, payload }: FlueContext) {
+export default defineWorkflow({
+  agent: docsWriterAgent,
+  run: writeExamplesRun,
+});
+
+async function writeExamplesRun({ harness, input }: { harness: any; input: any }) {
   const { projectRoot, moduleName, topic, docType, outputDocPath, packageName, parentModule } =
-    payload as {
+    input as {
       projectRoot: string;
       moduleName: string;
       topic: string;
@@ -33,10 +39,10 @@ export async function run({ init, payload }: FlueContext) {
       parentModule?: string;
     };
 
-  if (!projectRoot) throw new Error('payload.projectRoot is required');
-  if (!moduleName) throw new Error('payload.moduleName is required');
-  if (!topic) throw new Error('payload.topic is required');
-  if (!docType) throw new Error('payload.docType is required');
+  if (!projectRoot) throw new Error('input.projectRoot is required');
+  if (!moduleName) throw new Error('input.moduleName is required');
+  if (!topic) throw new Error('input.topic is required');
+  if (!docType) throw new Error('input.docType is required');
   if (!fs.existsSync(projectRoot)) throw new Error(`projectRoot not found: ${projectRoot}`);
 
   const validDocTypes: DocType[] = ['data-type-ref', 'tutorial', 'how-to-guide', 'module-ref'];
@@ -48,7 +54,7 @@ export async function run({ init, payload }: FlueContext) {
   console.log(`[write-examples] parentModule:  ${parentModule ?? '(flat — root level)'}`);
   console.log(`[write-examples] outputDocPath: ${outputDocPath ?? '(not provided)'}`);
 
-  const result = await runExamplesPhase(init, {
+  const result = await runExamplesPhase(harness, {
     projectRoot,
     moduleName,
     topic,

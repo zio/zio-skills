@@ -1,6 +1,6 @@
 import 'dotenv/config.js';
 import * as path from 'node:path';
-import type { FlueContext } from '@flue/runtime';
+import { defineWorkflow } from '@flue/runtime';
 import docsWriterAgent from '../agents/docs-writer.js';
 import {
   normalizeDataTypePath,
@@ -10,7 +10,12 @@ import {
 import { runResearchPhase } from './phases/research.js';
 import { runDiagramPhase } from './phases/diagram.js';
 
-export async function run({ init, payload }: FlueContext) {
+export default defineWorkflow({
+  agent: docsWriterAgent,
+  run: designDiagramRun,
+});
+
+async function designDiagramRun({ harness, input }: { harness: any; input: any }) {
   const {
     projectRoot,
     dataTypePath,
@@ -18,7 +23,7 @@ export async function run({ init, payload }: FlueContext) {
     articlePath,
     baseUrl,
     prompt: userPrompt,
-  } = payload as {
+  } = input as {
     projectRoot: string;
     dataTypePath?: string;
     outputPath: string;
@@ -27,8 +32,8 @@ export async function run({ init, payload }: FlueContext) {
     prompt?: string;
   };
 
-  if (!projectRoot) throw new Error('payload.projectRoot is required');
-  if (!outputPath) throw new Error('payload.outputPath is required');
+  if (!projectRoot) throw new Error('input.projectRoot is required');
+  if (!outputPath) throw new Error('input.outputPath is required');
 
   const resolvedOutputPath = path.resolve(projectRoot, outputPath);
   const resolvedArticlePath = articlePath ? path.resolve(projectRoot, articlePath) : undefined;
@@ -51,8 +56,10 @@ export async function run({ init, payload }: FlueContext) {
     process.env.FLUE_PROJECT_ROOT = projectRoot;
 
     // Phase 1: Research
+    // TODO: runResearchPhase uses docsResearcherAgent (different agent) — needs migration.
+    // Migrate to: separate workflow via invoke(), or pass harness if researcher becomes primary.
     console.log('\n[Phase 1] Research: Understanding the data type...');
-    const researchResult = await runResearchPhase(init, {
+    const researchResult = await runResearchPhase(harness, {
       projectRoot,
       typeName,
       resolvedOutputPath,
@@ -69,11 +76,11 @@ export async function run({ init, payload }: FlueContext) {
     // If an article will be patched, initialize a writer session for the patch step
     let writerSession: any = null;
     if (resolvedArticlePath) {
-      const harness = await init(docsWriterAgent, { name: 'design-diagram-writer' });
-      writerSession = await harness.session();
+      writerSession = await harness.session('design-diagram-writer');
     }
 
-    const diagramResult = await runDiagramPhase(init, {
+    // TODO: runDiagramPhase uses diagramDesignerAgent (different agent) — needs migration.
+    const diagramResult = await runDiagramPhase(harness, {
       projectRoot,
       typeName,
       resolvedJsxPath: resolvedOutputPath,

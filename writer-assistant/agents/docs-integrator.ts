@@ -1,8 +1,8 @@
-import { createAgent } from '@flue/runtime';
+import { defineAgent } from '@flue/runtime';
 import { local } from '@flue/runtime/node';
 import docsIntegrateSkill from '../skills/docs-integrate/SKILL.md' with { type: 'skill' };
 
-export default createAgent(() => ({
+export default defineAgent(() => ({
   model: 'anthropic/claude-haiku-4-5',
   sandbox: local({ cwd: process.env.FLUE_PROJECT_ROOT || process.cwd() }),
   skills: [docsIntegrateSkill],

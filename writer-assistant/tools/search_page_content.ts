@@ -8,15 +8,14 @@ export function createSearchPageContent(state: CrossrefState) {
     name: 'search_page_content',
     description:
       'Search within a specific page for occurrences of a term. Returns context snippets showing where the term appears.',
-    parameters: v.object({
+    input: v.object({
       pageId: v.string(),
       searchTerm: v.string(),
       contextLines: v.optional(v.number()),
     }),
-    execute: async (args: Record<string, any>) => {
-      const pageId = args.pageId as string;
-      const searchTerm = args.searchTerm as string;
-      const contextLines = (args.contextLines as number | undefined) ?? 2;
+    run: async ({ input }) => {
+      const { pageId, searchTerm } = input;
+      const contextLines = input.contextLines ?? 2;
 
       console.log(
         `[search_page_content] Searching for "${searchTerm}" in page "${pageId}" (context: ${contextLines} lines)`
@@ -25,9 +24,7 @@ export function createSearchPageContent(state: CrossrefState) {
       const entry = state.index.find((e) => e.id === pageId);
       if (!entry) {
         console.log(`[search_page_content] ERROR: Page "${pageId}" not found in index`);
-        return JSON.stringify({
-          error: `Page ${pageId} not found in index`,
-        });
+        return { error: `Page ${pageId} not found in index` };
       }
 
       try {
@@ -56,18 +53,16 @@ export function createSearchPageContent(state: CrossrefState) {
           `[search_page_content] Found ${occurrences.length} occurrences of "${searchTerm}" in "${pageId}"`
         );
 
-        return JSON.stringify({
+        return {
           pageId,
           searchTerm,
           found: occurrences.length > 0,
           totalOccurrences: occurrences.length,
-          occurrences: occurrences.slice(0, 5), // Limit to 5 snippets
-        });
+          occurrences: occurrences.slice(0, 5),
+        };
       } catch (e) {
         console.log(`[search_page_content] ERROR reading page: ${e}`);
-        return JSON.stringify({
-          error: `Failed to read page: ${e}`,
-        });
+        return { error: `Failed to read page: ${e}` };
       }
     },
   });

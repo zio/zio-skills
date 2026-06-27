@@ -1,7 +1,7 @@
 import 'dotenv/config.js';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
-import type { FlueContext } from '@flue/runtime';
+import { defineWorkflow } from '@flue/runtime';
 import docsWriterAgent from '../agents/docs-writer.js';
 import { runStylePhase } from './phases/style.js';
 import { verifyBuild } from './phases/verify.js';
@@ -13,14 +13,19 @@ function inferDocsDir(filePath: string): string | null {
   return parts.slice(0, docsIdx + 1).join(path.sep);
 }
 
-export async function run({ init, payload }: FlueContext) {
-  const { filePath, typeName: typeNameInput } = payload as {
+export default defineWorkflow({
+  agent: docsWriterAgent,
+  run: fixWritingStyleRun,
+});
+
+async function fixWritingStyleRun({ harness, input }: { harness: any; input: any }) {
+  const { filePath, typeName: typeNameInput } = input as {
     filePath: string;
     typeName?: string;
   };
 
   // Validate inputs
-  if (!filePath) throw new Error('payload.filePath is required');
+  if (!filePath) throw new Error('input.filePath is required');
   if (!fs.existsSync(filePath)) throw new Error(`File not found: ${filePath}`);
 
   const typeName = typeNameInput || path.basename(filePath, '.md');
@@ -31,18 +36,18 @@ export async function run({ init, payload }: FlueContext) {
   const phasesCompleted: string[] = [];
 
   try {
-    // Initialize writer session — reused by runStylePhase fixer prompts
-    const harness = await init(docsWriterAgent, { name: 'fix-writing-style' });
-    const session = await harness.session();
+    const session = await harness.session('fix-writing-style');
 
     // Run style validation and fixing
     console.log('\n[Phase 1] Style Validation: Checking and fixing prose style...');
-    const styleResult = await runStylePhase(init, {
+    // TODO: runStylePhase uses init to spawn docsStyleCheckerAgent (different agent).
+    // Flue 1.0 removed multi-agent init; migrate style checker to Actions or invoke().
+    const styleResult = await runStylePhase(harness, {
       outputPath: filePath,
       projectRoot: path.dirname(filePath),
       typeName,
       session,
-      init, // pass init so style phase can spawn LLM checker agent
+      init: harness, // placeholder — style phase needs migration
     });
 
     console.log(

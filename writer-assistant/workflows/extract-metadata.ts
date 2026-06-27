@@ -1,7 +1,7 @@
 import 'dotenv/config.js';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
-import type { FlueContext } from '@flue/runtime';
+import { defineWorkflow } from '@flue/runtime';
 import metadataExtractorAgent from '../agents/metadata-extractor.js';
 import { loadConfig } from '../lib/config-loader.js';
 import { parseFrontmatter } from '../lib/markdown-parser.js';
@@ -132,24 +132,27 @@ function needsExtraction(
   return false; // 'file' mode handled separately
 }
 
-export async function run({ init, payload }: FlueContext) {
+export default defineWorkflow({
+  agent: metadataExtractorAgent,
+  run: extractMetadataRun,
+});
+
+async function extractMetadataRun({ harness, input }: { harness: any; input: any }) {
   const {
     docsDir,
     mode = 'missing',
     targetFile,
     targetDir,
-  } = payload as {
+  } = input as {
     docsDir: string;
     mode?: 'all' | 'missing' | 'file' | 'dir';
     targetFile?: string;
     targetDir?: string;
   };
 
-  if (!docsDir) throw new Error('payload.docsDir is required');
+  if (!docsDir) throw new Error('input.docsDir is required');
 
-  // Initialize with metadata-extractor agent to get a session
-  const harness = await init(metadataExtractorAgent, { name: 'extract-metadata' });
-  const session = await harness.session();
+  const session = await harness.session('extract-metadata');
 
   const config = loadConfig(docsDir);
 

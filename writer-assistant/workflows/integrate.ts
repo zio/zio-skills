@@ -1,7 +1,9 @@
 import 'dotenv/config.js';
 import * as path from 'node:path';
-import type { FlueContext } from '@flue/runtime';
+import { defineWorkflow } from '@flue/runtime';
 import docsIntegratorAgent from '../agents/docs-integrator.js';
+// TODO: pageLinkerAgent (Phase 2) is a secondary agent — Flue 1.0 removed multi-agent init.
+// Migrate Phase 2 to a separate workflow via invoke(), or restructure using Actions.
 import pageLinkerAgent from '../agents/page-linker.js';
 import { loadConfig } from '../lib/config-loader.js';
 import { loadState, emptyState } from '../lib/state-store.js';
@@ -10,14 +12,19 @@ import { processBatch } from './phases/process.js';
 import { createRunMdoc } from '../tools/run_mdoc.js';
 import { createBuildWebsite } from '../tools/build_website.js';
 
-export async function run({ init, payload }: FlueContext) {
-  const { projectRoot, docPath } = payload as {
+export default defineWorkflow({
+  agent: docsIntegratorAgent,
+  run: integrateRun,
+});
+
+async function integrateRun({ harness, input }: { harness: any; input: any }) {
+  const { projectRoot, docPath } = input as {
     projectRoot: string;
     docPath: string; // path to the new doc, relative to projectRoot (e.g. "docs/reference/chunk.md")
   };
 
-  if (!projectRoot) throw new Error('payload.projectRoot is required');
-  if (!docPath) throw new Error('payload.docPath is required');
+  if (!projectRoot) throw new Error('input.projectRoot is required');
+  if (!docPath) throw new Error('input.docPath is required');
 
   const docsDir = path.join(projectRoot, 'docs');
   const absDocPath = path.resolve(projectRoot, docPath);
@@ -28,8 +35,7 @@ export async function run({ init, payload }: FlueContext) {
   console.log('\n[integrate] Phase 1: Site integration (sidebar, index, compilation gate)');
   process.env.FLUE_PROJECT_ROOT = projectRoot;
 
-  const integratorHarness = await init(docsIntegratorAgent, { name: 'docs-integrate' });
-  const integratorSession = await integratorHarness.session();
+  const integratorSession = await harness.session('docs-integrate');
 
   const integratePrompt = `Integrate the newly written documentation page into the Docusaurus site.
 
@@ -53,8 +59,10 @@ Do not proceed to the next step until the current one succeeds.`;
   // Phase 2: Cross-reference — find inbound link candidates for the new page
   console.log('\n[integrate] Phase 2: Cross-referencing (find inbound See Also candidates)');
 
-  const linkerHarness = await init(pageLinkerAgent, { name: 'crossref-integrate' });
-  const linkerSession = await linkerHarness.session();
+  // TODO: pageLinkerAgent is a different agent — can't use harness.session() here.
+  // Proper fix: split Phase 2 into a separate workflow, call via invoke().
+  const linkerSession = null as any; // placeholder until multi-agent migration
+  void pageLinkerAgent; // suppress unused import warning
 
   // Reindex to include the new page
   let state = (await loadState(docsDir)) ?? emptyState(docsDir);
