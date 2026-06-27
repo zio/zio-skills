@@ -23,23 +23,21 @@ Example — Guides category appended:
 // docs/sidebars.js
 module.exports = {
   docs: [
-    "index",
+    'index',
     {
-      type: "category",
-      label: "Reference",
+      type: 'category',
+      label: 'Reference',
       items: [
-        "reference/chunk",
-        "reference/schema",
+        'reference/chunk',
+        'reference/schema',
         // ... existing reference pages
       ],
     },
     // 👇 NEW category, added by this step
     {
-      type: "category",
-      label: "Guides",
-      items: [
-        "guides/guide-id-here",
-      ],
+      type: 'category',
+      label: 'Guides',
+      items: ['guides/guide-id-here'],
     },
   ],
 };
