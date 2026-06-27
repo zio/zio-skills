@@ -1,3 +1,4 @@
+import * as v from 'valibot';
 import 'dotenv/config.js';
 import * as path from 'node:path';
 import { defineWorkflow } from '@flue/runtime';
@@ -14,7 +15,8 @@ import { verifyBuild } from './phases/verify.js';
 
 export default defineWorkflow({
   agent: pageLinkerAgent,
-  run: crossrefRun,
+  input: v.record(v.string(), v.unknown()),
+  run: crossrefRun as (ctx: any) => any,
 });
 
 async function crossrefRun({ harness, input }: { harness: any; input: any }) {

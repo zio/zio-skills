@@ -1,9 +1,12 @@
+import * as v from 'valibot';
 import { defineWorkflow } from '@flue/runtime';
 import codingAgent from '../agents/coding-agent.js';
 
 export default defineWorkflow({
   agent: codingAgent,
-  run: async ({ harness, input }) => {
+  input: v.record(v.string(), v.unknown()),
+  run: (async (ctx: any) => {
+    const { harness, input } = ctx;
     const { pwd, prompt } = input as { pwd?: string; prompt?: string };
 
     if (!pwd || !prompt) {
@@ -21,5 +24,5 @@ export default defineWorkflow({
     return await session.prompt(
       `You are working in the project directory: ${pwd}\n\nWhen using bash, execute commands in the project directory: ${pwd}\n\nTask: ${prompt}`
     );
-  },
+  }) as (ctx: any) => any,
 });

@@ -1,3 +1,4 @@
+import * as v from 'valibot';
 import 'dotenv/config.js';
 import * as path from 'node:path';
 import { defineWorkflow } from '@flue/runtime';
@@ -12,7 +13,8 @@ import { runDiagramPhase } from './phases/diagram.js';
 
 export default defineWorkflow({
   agent: docsWriterAgent,
-  run: designDiagramRun,
+  input: v.record(v.string(), v.unknown()),
+  run: designDiagramRun as (ctx: any) => any,
 });
 
 async function designDiagramRun({ harness, input }: { harness: any; input: any }) {

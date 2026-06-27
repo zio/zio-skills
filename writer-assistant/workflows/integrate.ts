@@ -1,3 +1,4 @@
+import * as v from 'valibot';
 import 'dotenv/config.js';
 import * as path from 'node:path';
 import { defineWorkflow } from '@flue/runtime';
@@ -14,7 +15,8 @@ import { createBuildWebsite } from '../tools/build_website.js';
 
 export default defineWorkflow({
   agent: docsIntegratorAgent,
-  run: integrateRun,
+  input: v.record(v.string(), v.unknown()),
+  run: integrateRun as (ctx: any) => any,
 });
 
 async function integrateRun({ harness, input }: { harness: any; input: any }) {

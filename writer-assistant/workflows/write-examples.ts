@@ -1,3 +1,4 @@
+import * as v from 'valibot';
 import 'dotenv/config.js';
 import * as fs from 'node:fs';
 import { defineWorkflow } from '@flue/runtime';
@@ -23,7 +24,8 @@ export interface WriteExamplesResult {
 
 export default defineWorkflow({
   agent: docsWriterAgent,
-  run: writeExamplesRun,
+  input: v.record(v.string(), v.unknown()),
+  run: writeExamplesRun as (ctx: any) => any,
 });
 
 async function writeExamplesRun({ harness, input }: { harness: any; input: any }) {

@@ -1,3 +1,4 @@
+import * as v from 'valibot';
 import 'dotenv/config.js';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
@@ -62,7 +63,8 @@ function parseWebsiteBuildErrors(output: string): string[] {
 
 export default defineWorkflow({
   agent: docsWriterAgent,
-  run: fixWebsiteRun,
+  input: v.record(v.string(), v.unknown()),
+  run: fixWebsiteRun as (ctx: any) => any,
 });
 
 async function fixWebsiteRun({ harness, input }: { harness: any; input: any }) {

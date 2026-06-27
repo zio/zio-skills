@@ -1,3 +1,4 @@
+import * as v from 'valibot';
 import 'dotenv/config.js';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
@@ -57,7 +58,8 @@ function findRecentlyModifiedMarkdownFiles(
 
 export default defineWorkflow({
   agent: docsWriterAgent,
-  run: writeDataTypeRefRun,
+  input: v.record(v.string(), v.unknown()),
+  run: writeDataTypeRefRun as (ctx: any) => any,
 });
 
 async function writeDataTypeRefRun({ harness, input }: { harness: any; input: any }) {

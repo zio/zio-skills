@@ -1,3 +1,4 @@
+import * as v from 'valibot';
 import 'dotenv/config.js';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
@@ -15,7 +16,8 @@ function inferDocsDir(filePath: string): string | null {
 
 export default defineWorkflow({
   agent: docsWriterAgent,
-  run: fixWritingStyleRun,
+  input: v.record(v.string(), v.unknown()),
+  run: fixWritingStyleRun as (ctx: any) => any,
 });
 
 async function fixWritingStyleRun({ harness, input }: { harness: any; input: any }) {

@@ -1,3 +1,4 @@
+import * as v from 'valibot';
 import 'dotenv/config.js';
 import * as fs from 'node:fs';
 import { defineWorkflow } from '@flue/runtime';
@@ -24,7 +25,8 @@ const DEFAULT_MAX_ROUNDS = 3;
 
 export default defineWorkflow({
   agent: docsWriterAgent,
-  run: fixMdocRun,
+  input: v.record(v.string(), v.unknown()),
+  run: fixMdocRun as (ctx: any) => any,
 });
 
 async function fixMdocRun({ harness, input }: { harness: any; input: any }) {
