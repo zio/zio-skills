@@ -13,7 +13,7 @@ export function createSearchPageContent(state: CrossrefState) {
       searchTerm: v.string(),
       contextLines: v.optional(v.number()),
     }),
-    run: async ({ input }) => {
+    run: (async ({ input }: { input: any }) => {
       const { pageId, searchTerm } = input;
       const contextLines = input.contextLines ?? 2;
 
@@ -64,6 +64,6 @@ export function createSearchPageContent(state: CrossrefState) {
         console.log(`[search_page_content] ERROR reading page: ${e}`);
         return { error: `Failed to read page: ${e}` };
       }
-    },
+    }) as (ctx: any) => any,
   });
 }

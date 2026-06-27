@@ -10,7 +10,7 @@ export function createGetAdjacentPages(state: CrossrefState) {
     input: v.object({
       pageId: v.string(),
     }),
-    run: async ({ input }) => {
+    run: (async ({ input }: { input: any }) => {
       const { pageId } = input;
 
       console.log(`[get_adjacent_pages] Getting adjacent pages for "${pageId}"`);
@@ -46,6 +46,6 @@ export function createGetAdjacentPages(state: CrossrefState) {
         adjacentCount: adjacentEntries.length,
         adjacent: adjacentEntries,
       };
-    },
+    }) as (ctx: any) => any,
   });
 }

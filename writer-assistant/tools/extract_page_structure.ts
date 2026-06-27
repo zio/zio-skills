@@ -12,7 +12,7 @@ export function createExtractPageStructure(state: CrossrefState) {
     input: v.object({
       pageId: v.string(),
     }),
-    run: async ({ input }) => {
+    run: (async ({ input }: { input: any }) => {
       const { pageId } = input;
 
       console.log(`[extract_page_structure] Extracting structure for page "${pageId}"`);
@@ -41,6 +41,6 @@ export function createExtractPageStructure(state: CrossrefState) {
         console.log(`[extract_page_structure] ERROR reading page: ${e}`);
         return { error: `Failed to read page: ${e}` };
       }
-    },
+    }) as (ctx: any) => any,
   });
 }

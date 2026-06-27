@@ -13,7 +13,7 @@ export function createValidateAnchor(state: CrossrefState) {
       pageId: v.string(),
       anchorText: v.string(),
     }),
-    run: async ({ input }) => {
+    run: (async ({ input }: { input: any }) => {
       const { pageId, anchorText } = input;
 
       console.log(`[validate_anchor] Checking anchor "${anchorText}" in page "${pageId}"`);
@@ -57,6 +57,6 @@ export function createValidateAnchor(state: CrossrefState) {
         console.log(`[validate_anchor] ERROR reading page: ${e}`);
         return { error: `Failed to read page: ${e}` };
       }
-    },
+    }) as (ctx: any) => any,
   });
 }
