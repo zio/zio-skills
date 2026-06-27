@@ -309,8 +309,9 @@ Before submitting, work through the **[CHECKLIST.md](./CHECKLIST.md)** — all 3
 
 ## Step 6: Integrate into Docs
 
-Place in `docs/guides/`. Update:
+Place the tutorial file in `docs/guides/` (not `docs/reference/`), then invoke the **`docs-integrate`** skill to complete site wiring:
 
-- `sidebars.js` — add under "Guides" category (not "Reference")
-- `docs/index.md` — add cross-reference
+- sidebars.js — add under "Guides" category (not "Reference")
+- docs/index.md — add cross-reference
 - Related reference pages — add reciprocal links in "See also" sections
+- Mandatory compilation gate — mdoc + full Docusaurus build

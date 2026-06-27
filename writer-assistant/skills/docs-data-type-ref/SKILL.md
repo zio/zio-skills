@@ -152,10 +152,11 @@ Verify documentation quality and correctness:
 
 1. Format all Scala files: `sbt scalafmtAll`
 2. Run lint checks: `sbt check`
-3. Update integration files:
-   - Add entry to `sidebars.js` in appropriate section
-   - Update `docs/index.md` with cross-reference
-   - Ensure other related docs link to this page
+3. Invoke the **`docs-integrate`** skill to complete site wiring:
+   - sidebars.js — add under "Reference" category
+   - docs/index.md — add cross-reference
+   - Related docs — add inbound "See also" links
+   - Mandatory compilation gate — mdoc + full Docusaurus build
 4. Verify CI passes before claiming completion
 
 ## Key Conventions
