@@ -1,12 +1,11 @@
+import { defineAction } from '@flue/runtime';
+import * as v from 'valibot';
 import * as fs from 'node:fs';
-// TODO: This phase needs docsReviewerAgent — a different agent from the calling workflow's primary.
-import docsReviewerAgent from '../../agents/docs-reviewer.js';
 
 export interface ReviewConfig {
-  outputPath: string; // absolute path to the written .md file
+  outputPath: string;
   projectRoot: string;
   typeName: string;
-  session: any; // AgentSession reused from writer for fixes
   sourceFiles?: string[];
   relatedDocs?: string[];
 }
@@ -20,16 +19,8 @@ export interface ReviewResult {
 
 const MAX_ROUNDS = 5;
 
-/**
- * Run the review phase: critic → fix loop until approved or max rounds
- * Uses a fresh critic agent each round, reuses the writer session for fixes
- * Iterates until HIGH + MEDIUM findings reach zero or MAX_ROUNDS is reached
- */
-export async function runReviewPhase(
-  harness: any, // TODO: should be FlueHarness for docsReviewerAgent once multi-agent migrated
-  config: ReviewConfig
-): Promise<ReviewResult> {
-  const { outputPath, projectRoot, typeName, session, sourceFiles = [], relatedDocs = [] } = config;
+export async function runReviewPhase(harness: any, config: ReviewConfig): Promise<ReviewResult> {
+  const { outputPath, projectRoot, typeName, sourceFiles = [], relatedDocs = [] } = config;
 
   const result: ReviewResult = {
     approved: false,
@@ -46,17 +37,17 @@ export async function runReviewPhase(
     };
   }
 
+  // Fixer session created once — shared across all rounds
+  const fixerSession = await harness.session('docs-writer-fixer');
+
   const unresolvable = new Set<string>();
 
   for (let round = 1; round <= MAX_ROUNDS; round++) {
     result.rounds = round;
     console.log(`\n[Phase 5] Round ${round}/${MAX_ROUNDS}: Spawning critic...`);
 
-    // TODO: docsReviewerAgent is a different agent — harness here is the calling workflow's primary.
-    void docsReviewerAgent;
     const criticSession = await harness.session(`docs-reviewer-round-${round}`);
 
-    // Build critic prompt
     const sourceFilesList =
       sourceFiles.length > 0 ? sourceFiles.map((f) => `  - ${f}`).join('\n') : '  (none provided)';
     const relatedDocsList =
@@ -98,9 +89,7 @@ Use dimension: accuracy, completeness, consistency, clarity, structure
 
 ${
   unresolvable.size > 0
-    ? `\n**Exclude these previously unresolvable issues (do not re-flag):**\n${Array.from(
-        unresolvable
-      )
+    ? `\n**Exclude these previously unresolvable issues (do not re-flag):**\n${Array.from(unresolvable)
         .map((u) => `- ${u}`)
         .join('\n')}\n`
     : ''
@@ -113,7 +102,6 @@ ${
     let criticResult = await criticSession.prompt(criticPrompt);
     let criticText = criticResult.text || String(criticResult);
 
-    // Validate response format
     if (!criticText.includes('### Findings') || !criticText.includes('### Verdict')) {
       console.log('  ⚠ Invalid critic response format, retrying...');
       const retryResult = await criticSession.prompt(
@@ -131,7 +119,6 @@ ${
       }
     }
 
-    // Parse findings
     const findingsSection = criticText.split('### Verdict')[0];
     const verdictSection = criticText.split('### Verdict')[1] || '';
 
@@ -146,7 +133,6 @@ ${
       console.log(`  Unresolvable issues tracked: ${unresolvable.size}`);
     }
 
-    // Phase C: Parse verdict
     if (verdict === 'APPROVED') {
       console.log(`  ✓ Documentation approved`);
       return {
@@ -157,7 +143,6 @@ ${
       };
     }
 
-    // Determine actionable findings for this round
     const actionable = [...findings.HIGH, ...findings.MEDIUM];
 
     if (actionable.length === 0) {
@@ -172,24 +157,19 @@ ${
 
     if (round === MAX_ROUNDS) {
       console.log(`  ⚠ Max rounds reached (${MAX_ROUNDS}). Returning unresolved issues.`);
-      const unresolved = actionable.map((f) => f.title);
       return {
         approved: false,
         rounds: round,
         findingsFixed: result.findingsFixed,
-        unresolvedIssues: unresolved,
+        unresolvedIssues: actionable.map((f) => f.title),
       };
     }
 
-    // Phase B: Spawn fixer using writer session
     console.log(`  Spawning fixer for ${actionable.length} findings...`);
 
-    // Build fixer prompt with verification steps and previous feedback
     const previousFeedbackSection =
       unresolvable.size > 0
-        ? `\n**Issues that persisted in previous rounds** (be extra careful with these):\n${Array.from(
-            unresolvable
-          )
+        ? `\n**Issues that persisted in previous rounds** (be extra careful with these):\n${Array.from(unresolvable)
             .map((u) => `- ${u}`)
             .join('\n')}\n`
         : '';
@@ -221,29 +201,21 @@ ${previousFeedbackSection}
 
 Focus on quality over quantity. Better to skip a fix than introduce new problems.`;
 
-    const fixerResult = await session.prompt(fixerPrompt);
+    const fixerResult = await fixerSession.prompt(fixerPrompt);
     const fixerText = fixerResult.text || String(fixerResult);
 
-    // Parse fixer report: track which specific issues were fixed vs couldn't be fixed
     const fixedMatches = fixerText.match(/✓\s*Fixed:\s*(.+?)(?=\n|✓|Could not|$)/gi) || [];
     const couldNotFixMatches =
       fixerText.match(/Could not fix:\s*(.+?)(?=\n|✓|Could not|$)/gi) || [];
 
     console.log(`    Fixed: ${fixedMatches.length}, Could not fix: ${couldNotFixMatches.length}`);
 
-    // Track unresolvable issues for next round
     couldNotFixMatches.forEach((match: string) => {
       const title = match.replace(/Could not fix:\s*/i, '').trim();
-      if (title.length > 0) {
-        unresolvable.add(title);
-      }
+      if (title.length > 0) unresolvable.add(title);
     });
 
-    // Update findings fixed count (count what fixer reported as fixed)
     const numFixed = fixedMatches.length;
-    const numCouldNotFix = couldNotFixMatches.length;
-
-    // Distribute the fixed count proportionally across severities
     if (numFixed > 0) {
       const highProp = findings.HIGH.length / actionable.length;
       const mediumProp = findings.MEDIUM.length / actionable.length;
@@ -254,6 +226,22 @@ Focus on quality over quantity. Better to skip a fix than introduce new problems
 
   return result;
 }
+
+export const reviewAction = defineAction({
+  name: 'review_docs',
+  description:
+    'Critique documentation and iteratively fix issues (critic → fixer loop) until approved or max rounds reached.',
+  input: v.object({
+    outputPath: v.string(),
+    projectRoot: v.string(),
+    typeName: v.string(),
+    sourceFiles: v.optional(v.array(v.string())),
+    relatedDocs: v.optional(v.array(v.string())),
+  }),
+  run: (async ({ harness, input }: { harness: any; input: any }) => {
+    return runReviewPhase(harness, input);
+  }) as (ctx: any) => any,
+});
 
 interface Finding {
   severity: 'HIGH' | 'MEDIUM' | 'LOW';
@@ -273,22 +261,20 @@ interface ParsedFindings {
 function parseFindings(findingsText: string): ParsedFindings {
   const result: ParsedFindings = { HIGH: [], MEDIUM: [], LOW: [] };
 
-  // Match pattern: **SEVERITY/dimension** — title
   const findingPattern =
     /\*\*(HIGH|MEDIUM|LOW)\/(\w+)\*\*\s*—\s*(.+?)\n\s*-\s*Location:\s*(.+?)\n\s*-\s*Problem:\s*(.+?)\n\s*-\s*(?:Impact:.*?\n\s*)?-\s*Suggestion:\s*(.+?)(?=\n\*\*|$)/gs;
 
   let match: RegExpExecArray | null;
   while ((match = findingPattern.exec(findingsText)) !== null) {
     const [, severity, dimension, title, location, problem, suggestion] = match;
-    const finding: Finding = {
+    result[severity as keyof ParsedFindings].push({
       severity: severity as 'HIGH' | 'MEDIUM' | 'LOW',
       dimension,
       title,
       location,
       problem,
       suggestion,
-    };
-    result[severity as keyof ParsedFindings].push(finding);
+    });
   }
 
   return result;

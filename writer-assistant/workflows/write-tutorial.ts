@@ -9,10 +9,9 @@ import {
   validatePathsAndResolve,
   inferSourceDirs,
 } from '../lib/scala-source-discovery.js';
-import { runResearchPhase } from './phases/research.js';
-import { runReviewPhase } from './phases/review.js';
-import { runStylePhase } from './phases/style.js';
-import { verifyBuild } from './phases/verify.js';
+import { runResearchPhase } from '../actions/research.js';
+import { runReviewPhase } from '../actions/review.js';
+import { runStylePhase } from '../actions/style.js';
 import { runExamplesPhase } from './phases/examples.js';
 import { runBuild } from '../lib/build-runner.js';
 import { createRunMdoc } from '../tools/run_mdoc.js';
@@ -367,7 +366,6 @@ Report final status and any updates made.`;
         outputPath: resolvedOutputPath,
         projectRoot,
         typeName: topic,
-        session: session!, // reuse writer session for fixes
         sourceFiles: sourceDirs,
       });
       console.log(
@@ -396,7 +394,6 @@ Report final status and any updates made.`;
         outputPath: resolvedOutputPath,
         projectRoot,
         typeName: topic,
-        session: session!, // reuse writer session for fixes
       });
       console.log(
         `[Phase 6] ${styleResult.passed ? '✓' : '⚠'} Style validation complete (${styleResult.rounds} round(s))`

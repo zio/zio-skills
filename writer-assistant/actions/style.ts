@@ -1,16 +1,14 @@
+import { defineAction } from '@flue/runtime';
+import * as v from 'valibot';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { execSync } from 'node:child_process';
-// TODO: docsStyleCheckerAgent is a different agent from the calling workflow's primary.
-import docsStyleCheckerAgent from '../../agents/docs-style-checker.js';
 
 export interface StyleConfig {
-  outputPath: string; // absolute path to the written .md file
+  outputPath: string;
   projectRoot: string;
   typeName: string;
-  session: any; // AgentSession reused from writer for fixes
-  init?: any; // TODO: was FlueContext['init'] — now accepts harness or undefined
-  maxRounds?: number; // check+fix passes (default 1)
+  maxRounds?: number;
 }
 
 export interface StyleResult {
@@ -22,59 +20,34 @@ export interface StyleResult {
 
 const DEFAULT_MAX_ROUNDS = 1;
 
-// Find check-docs-style.sh in writer-assistant skills directory
-// Try multiple possible locations since Flue bundles code
 function resolveCheckStyleScript(): string {
   const possiblePaths = [
-    // Local in writer-assistant/skills/
     path.resolve(process.cwd(), 'skills/docs-writing-style/check-docs-style.sh'),
-    // From env variable (if FLUE_PROJECT_ROOT points to writer-assistant)
     path.resolve(
       process.env.FLUE_PROJECT_ROOT || '',
       'skills/docs-writing-style/check-docs-style.sh'
     ),
-    // Fallback to plugins directory in zio-skills repo
     path.resolve(
       process.env.FLUE_PROJECT_ROOT || '',
       '../../plugins/documentation/skills/docs-writing-style/check-docs-style.sh'
     ),
   ];
-
-  for (const scriptPath of possiblePaths) {
-    if (fs.existsSync(scriptPath)) {
-      return scriptPath;
-    }
-  }
-
-  // If none found, return first option (will be checked in phase and gracefully skipped)
-  return possiblePaths[0];
+  return possiblePaths.find(fs.existsSync) ?? possiblePaths[0];
 }
 
-// Find check-mdoc-conventions.sh in writer-assistant skills directory
 function resolveCheckMdocScript(): string {
   const possiblePaths = [
-    // Local in writer-assistant/skills/
     path.resolve(process.cwd(), 'skills/docs-mdoc-conventions/check-mdoc-conventions.sh'),
-    // From env variable (if FLUE_PROJECT_ROOT points to writer-assistant)
     path.resolve(
       process.env.FLUE_PROJECT_ROOT || '',
       'skills/docs-mdoc-conventions/check-mdoc-conventions.sh'
     ),
-    // Fallback to plugins directory in zio-skills repo
     path.resolve(
       process.env.FLUE_PROJECT_ROOT || '',
       '../../plugins/documentation/skills/docs-mdoc-conventions/check-mdoc-conventions.sh'
     ),
   ];
-
-  for (const scriptPath of possiblePaths) {
-    if (fs.existsSync(scriptPath)) {
-      return scriptPath;
-    }
-  }
-
-  // If none found, return first option (will be checked in phase and gracefully skipped)
-  return possiblePaths[0];
+  return possiblePaths.find(fs.existsSync) ?? possiblePaths[0];
 }
 
 const CHECK_STYLE_SCRIPT = resolveCheckStyleScript();
@@ -84,21 +57,23 @@ function runMechanicalCheck(outputPath: string, projectRoot: string): string {
   const outputs: string[] = [];
 
   try {
-    const styleOutput = execSync(`bash "${CHECK_STYLE_SCRIPT}" "${outputPath}"`, {
-      cwd: projectRoot,
-      encoding: 'utf-8',
-    });
-    outputs.push(styleOutput);
+    outputs.push(
+      execSync(`bash "${CHECK_STYLE_SCRIPT}" "${outputPath}"`, {
+        cwd: projectRoot,
+        encoding: 'utf-8',
+      })
+    );
   } catch (error: any) {
     outputs.push(error.stdout || String(error));
   }
 
   try {
-    const mdocOutput = execSync(`bash "${CHECK_MDOC_SCRIPT}" "${outputPath}"`, {
-      cwd: projectRoot,
-      encoding: 'utf-8',
-    });
-    outputs.push(mdocOutput);
+    outputs.push(
+      execSync(`bash "${CHECK_MDOC_SCRIPT}" "${outputPath}"`, {
+        cwd: projectRoot,
+        encoding: 'utf-8',
+      })
+    );
   } catch (error: any) {
     outputs.push(error.stdout || String(error));
   }
@@ -106,19 +81,8 @@ function runMechanicalCheck(outputPath: string, projectRoot: string): string {
   return outputs.join('\n');
 }
 
-/**
- * Run the style validation phase: each round = check (mechanical + LLM) → fix.
- * Fixes are content-grounded: the fixer receives the exact violation lines with
- * locations and is instructed to read the document at each location before fixing,
- * so each fix derives from the actual content there (not from abstract rule
- * descriptions, which produces repetitive template prose).
- * After the final round, a mechanical re-check reports the post-fix state.
- */
-export async function runStylePhase(
-  harness: any, // TODO: was FlueContext['init'] — passes harness for LLM style checker
-  config: StyleConfig
-): Promise<StyleResult> {
-  const { outputPath, projectRoot, typeName, session, init: initForAgent } = config;
+export async function runStylePhase(harness: any, config: StyleConfig): Promise<StyleResult> {
+  const { outputPath, projectRoot, typeName } = config;
   const maxRounds = config.maxRounds ?? DEFAULT_MAX_ROUNDS;
 
   const result: StyleResult = {
@@ -136,42 +100,33 @@ export async function runStylePhase(
     };
   }
 
-  // Check if at least one checker script exists
   const hasStyleChecker = fs.existsSync(CHECK_STYLE_SCRIPT);
   const hasMdocChecker = fs.existsSync(CHECK_MDOC_SCRIPT);
 
   if (!hasStyleChecker && !hasMdocChecker) {
     console.log(`  ⚠ No style checkers found, skipping style validation`);
-    return {
-      ...result,
-      passed: true, // Gracefully skip if neither script exists
-      rounds: 0,
-    };
+    return { ...result, passed: true, rounds: 0 };
   }
 
-  // file:line keys of violations the fixer reported it could not fix
+  // Fixer session created once for all rounds
+  const fixerSession = await harness.session('docs-style-fixer');
+
   const unresolvable = new Set<string>();
 
   for (let round = 1; round <= maxRounds; round++) {
     result.rounds = round;
     console.log(`\n[Style] Round ${round}/${maxRounds}: Checking documentation style...`);
 
-    // Phase A: Mechanical check via check-docs-style.sh
     const checkOutput = runMechanicalCheck(outputPath, projectRoot);
     const mechanicalLines = extractViolationLines(checkOutput);
     console.log(`  [Mechanical] Found ${mechanicalLines.length} violation(s)`);
     logRuleCounts(countByRule(mechanicalLines));
 
-    // Phase B: LLM-based judgment check (if harness is available)
+    // LLM-based judgment check
     let llmLines: string[] = [];
-
-    if (initForAgent) {
-      try {
-        // TODO: docsStyleCheckerAgent is a different agent — harness here is the calling workflow's primary.
-        void docsStyleCheckerAgent;
-        const checkerSession = await initForAgent.session(`docs-style-checker-round-${round}`);
-
-        const checkerPrompt = `Review the documentation file for prose style rule violations:
+    try {
+      const checkerSession = await harness.session(`docs-style-checker-round-${round}`);
+      const checkerPrompt = `Review the documentation file for prose style rule violations:
 
 File: ${outputPath}
 
@@ -192,18 +147,15 @@ Then output:
 ### Verdict
 **APPROVED** or **ITERATE**`;
 
-        const checkerResult = await checkerSession.prompt(checkerPrompt);
-        const checkerText = checkerResult.text || String(checkerResult);
-
-        llmLines = extractViolationLines(checkerText);
-        console.log(`  [LLM Review] Found ${llmLines.length} violation(s)`);
-        logRuleCounts(countByRule(llmLines));
-      } catch (error) {
-        console.log(`  [LLM Review] Skipped (${error instanceof Error ? error.message : 'error'})`);
-      }
+      const checkerResult = await checkerSession.prompt(checkerPrompt);
+      const checkerText = checkerResult.text || String(checkerResult);
+      llmLines = extractViolationLines(checkerText);
+      console.log(`  [LLM Review] Found ${llmLines.length} violation(s)`);
+      logRuleCounts(countByRule(llmLines));
+    } catch (error) {
+      console.log(`  [LLM Review] Skipped (${error instanceof Error ? error.message : 'error'})`);
     }
 
-    // Combine both layers, drop violations the fixer already reported as unfixable
     const allLines = [...mechanicalLines, ...llmLines].filter((line) => {
       const key = extractLocationKey(line);
       return key === null || !unresolvable.has(key);
@@ -213,20 +165,14 @@ Then output:
 
     if (allLines.length === 0) {
       console.log(`  ✓ Documentation style validated`);
-      return {
-        passed: true,
-        rounds: round,
-        violations: result.violations,
-        unresolvedViolations: [],
-      };
+      return { passed: true, rounds: round, violations: result.violations, unresolvedViolations: [] };
     }
 
-    // Phase C: Fix, grounded in the exact violations
     console.log(`  Spawning fixer for ${allLines.length} violation(s)...`);
 
-    // Extract violated rule numbers and inject rule hints for structural rules
     const RULE_HINTS: Record<string, string> = {
-      '19': 'Rule 19 (signatures within containing type): bare `def`, `val`, or `var` in a code block must be wrapped inside its owning `trait`/`class`/`object`. Never show a standalone signature at top level of a code block.\nExample fixes:\n  Bad:  ```scala\n  def foo: Unit\n  ```\n  Good: ```scala\n  trait Foo {\n    def foo: Unit\n  }\n  ```\n\n  Bad:  ```scala\n  val live: ZLayer[Any, Nothing, Service]\n  ```\n  Good: ```scala\n  object Service {\n    val live: ZLayer[Any, Nothing, Service]\n  }\n  ```',
+      '19':
+        'Rule 19 (signatures within containing type): bare `def`, `val`, or `var` in a code block must be wrapped inside its owning `trait`/`class`/`object`. Never show a standalone signature at top level of a code block.\nExample fixes:\n  Bad:  ```scala\n  def foo: Unit\n  ```\n  Good: ```scala\n  trait Foo {\n    def foo: Unit\n  }\n  ```\n\n  Bad:  ```scala\n  val live: ZLayer[Any, Nothing, Service]\n  ```\n  Good: ```scala\n  object Service {\n    val live: ZLayer[Any, Nothing, Service]\n  }\n  ```',
     };
 
     const violatedRuleNums = [
@@ -255,10 +201,9 @@ Process:
 
 Better to skip a fix than introduce new problems.`;
 
-    const fixerResult = await session.prompt(fixerPrompt);
+    const fixerResult = await fixerSession.prompt(fixerPrompt);
     const fixerText = fixerResult.text || String(fixerResult);
 
-    // Parse fixer report (per-location)
     const fixedMatches = fixerText.match(/✓\s*Fixed\s+\S+:\d+/gi) || [];
     const couldNotFixMatches = fixerText.match(/Could not fix\s+\S+:\d+/gi) || [];
 
@@ -266,9 +211,7 @@ Better to skip a fix than introduce new problems.`;
 
     couldNotFixMatches.forEach((match: string) => {
       const key = extractLocationKey(match);
-      if (key) {
-        unresolvable.add(key);
-      }
+      if (key) unresolvable.add(key);
     });
 
     if (unresolvable.size > 0) {
@@ -276,7 +219,7 @@ Better to skip a fix than introduce new problems.`;
     }
   }
 
-  // Final mechanical re-check to report the post-fix state
+  // Final mechanical re-check
   const finalOutput = runMechanicalCheck(outputPath, projectRoot);
   const finalLines = extractViolationLines(finalOutput).filter((line) => {
     const key = extractLocationKey(line);
@@ -294,11 +237,21 @@ Better to skip a fix than introduce new problems.`;
   return result;
 }
 
-/**
- * Extract verbatim violation lines (format: <file>:<line>: [Rule N] <description>)
- * from checker output, preserving location and description for the fixer.
- * Matches both numeric rules (Rule 1, Rule 26) and mdoc rule (Rule mdoc).
- */
+export const styleAction = defineAction({
+  name: 'validate_style',
+  description:
+    'Validate documentation prose style using mechanical checks and LLM review, then iteratively fix violations.',
+  input: v.object({
+    outputPath: v.string(),
+    projectRoot: v.string(),
+    typeName: v.string(),
+    maxRounds: v.optional(v.number()),
+  }),
+  run: (async ({ harness, input }: { harness: any; input: any }) => {
+    return runStylePhase(harness, input);
+  }) as (ctx: any) => any,
+});
+
 function extractViolationLines(checkOutput: string): string[] {
   return checkOutput
     .split('\n')
@@ -306,7 +259,6 @@ function extractViolationLines(checkOutput: string): string[] {
     .filter((line) => /\[Rule (\d+|mdoc)\]/.test(line));
 }
 
-/** Extract a "file:line" key from a violation or fixer-report line. */
 function extractLocationKey(line: string): string | null {
   const match = line.match(/(\S+):(\d+)/);
   return match ? `${path.basename(match[1])}:${match[2]}` : null;
@@ -316,9 +268,7 @@ function countByRule(lines: string[]): { [rule: string]: number } {
   const counts: { [rule: string]: number } = {};
   for (const line of lines) {
     const match = line.match(/\[Rule (\d+)\]/);
-    if (match) {
-      counts[match[1]] = (counts[match[1]] || 0) + 1;
-    }
+    if (match) counts[match[1]] = (counts[match[1]] || 0) + 1;
   }
   return counts;
 }
