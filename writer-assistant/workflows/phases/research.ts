@@ -2,7 +2,13 @@
 // Migration: accept FlueHarness for docsResearcherAgent once multi-agent pattern is resolved.
 import docsResearcherAgent from '../../agents/docs-researcher.js';
 
-export type ResearchFocus = 'data-type-ref' | 'tutorial' | 'guide' | 'explanation' | 'diagram';
+export type ResearchFocus =
+  | 'data-type-ref'
+  | 'tutorial'
+  | 'guide'
+  | 'explanation'
+  | 'diagram'
+  | 'module-ref';
 
 export interface ResearchConfig {
   projectRoot: string;
@@ -80,6 +86,7 @@ function getDocumentationTypeLabel(focus: ResearchFocus): string {
     guide: 'How-To Guide',
     explanation: 'Explanation',
     diagram: 'Diagram Internals Research',
+    'module-ref': 'Module Reference',
   };
   return labels[focus];
 }
@@ -93,6 +100,19 @@ function getFocusInstruction(focus: ResearchFocus, typeName: string): string {
     guide: `**Focus:** Map configuration options, decision points, and integration patterns. Emphasize: setup requirements, tradeoffs, use case selection, integration examples.`,
 
     explanation: `**Focus:** Trace design motivation, architectural decisions, and rationale. Emphasize: design principles, problem domain, historical context, comparisons with alternatives.`,
+
+    'module-ref': `**Focus:** Map the full module landscape — not a single type, but how all core types work together as a system.
+
+Specifically gather:
+- All core and supporting types in the module — their roles and responsibilities
+- Type relationships: which types contain, extend, or depend on others
+- Data flow patterns: how data moves through the module's type system
+- Common composition patterns: realistic multi-type usage sequences
+- Real-world usage examples from tests, examples, and application code
+- Existing documentation gaps — what's documented vs. what's missing
+- Integration points with other ZIO modules or external libraries
+
+Do NOT focus on exhaustive per-method API surface — that comes during writing. Emphasize: how types relate, how they compose, and what patterns experienced users rely on.`,
 
     diagram: `**Focus:** Extract the internal mechanics needed to build a faithful interactive diagram.
 
