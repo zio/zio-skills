@@ -15,7 +15,7 @@ import { runReviewPhase } from '../actions/review.js';
 import { runStylePhase } from '../actions/style.js';
 import { verifyBuild } from './phases/verify.js';
 import { runExamplesPhase } from './phases/examples.js';
-import { runDiagramPhase } from '../actions/diagram.js';
+import { runDiagramPhase } from './phases/diagram.js';
 import { createRunMdoc } from '../tools/run_mdoc.js';
 
 function findRecentlyModifiedMarkdownFiles(
@@ -211,6 +211,7 @@ Write the complete markdown file and save it to the specified output path.`;
         dataTypeInfo,
         researchResult,
         userPrompt: diagramPayload.prompt,
+        session, // reuse writer session for article patching
         articlePath: resolvedOutputPath,
       });
       console.log(

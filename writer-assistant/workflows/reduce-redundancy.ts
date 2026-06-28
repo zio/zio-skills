@@ -4,7 +4,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { defineWorkflow } from '@flue/runtime';
 import docsRedundancyFixerAgent from '../agents/docs-redundancy-fixer.js';
-import { runReduceRedundancyPhase } from '../actions/reduce-redundancy.js';
+import { runReduceRedundancyPhase } from './phases/reduce-redundancy.js';
 import { verifyBuild } from './phases/verify.js';
 
 function inferDocsDir(filePath: string): string | null {

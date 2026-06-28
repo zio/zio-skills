@@ -9,7 +9,7 @@ import {
   inferSourceDirs,
 } from '../lib/scala-source-discovery.js';
 import { runResearchPhase } from '../actions/research.js';
-import { runDiagramPhase } from '../actions/diagram.js';
+import { runDiagramPhase } from './phases/diagram.js';
 
 export default defineWorkflow({
   agent: docsWriterAgent,
@@ -75,6 +75,13 @@ async function designDiagramRun({ harness, input }: { harness: any; input: any }
     // Phase 2: Design diagram
     console.log('\n[Phase 2] Design: Generating interactive JSX diagram...');
 
+    // If an article will be patched, initialize a writer session for the patch step
+    let writerSession: any = null;
+    if (resolvedArticlePath) {
+      writerSession = await harness.session('design-diagram-writer');
+    }
+
+    // TODO: runDiagramPhase uses diagramDesignerAgent (different agent) — needs migration.
     const diagramResult = await runDiagramPhase(harness, {
       projectRoot,
       typeName,
@@ -84,6 +91,7 @@ async function designDiagramRun({ harness, input }: { harness: any; input: any }
       researchResult,
       baseUrl,
       userPrompt,
+      session: writerSession,
       articlePath: resolvedArticlePath,
     });
 
