@@ -17,44 +17,7 @@ import { verifyBuild } from './phases/verify.js';
 import { runExamplesPhase } from './phases/examples.js';
 import { runDiagramPhase } from './phases/diagram.js';
 import { createRunMdoc } from '../tools/run_mdoc.js';
-
-function findRecentlyModifiedMarkdownFiles(
-  projectRoot: string,
-  docsDir: string,
-  sinceTime: number
-): string[] {
-  if (!fs.existsSync(docsDir)) {
-    return [];
-  }
-
-  const result: string[] = [];
-  const walk = (dir: string) => {
-    try {
-      const entries = fs.readdirSync(dir, { withFileTypes: true });
-      for (const entry of entries) {
-        if (entry.name.startsWith('.')) continue; // Skip hidden files/dirs
-        const fullPath = path.join(dir, entry.name);
-        if (entry.isDirectory()) {
-          walk(fullPath);
-        } else if (entry.isFile() && (entry.name.endsWith('.md') || entry.name.endsWith('.mdx'))) {
-          try {
-            const stat = fs.statSync(fullPath);
-            if (stat.mtimeMs >= sinceTime) {
-              result.push(path.relative(projectRoot, fullPath));
-            }
-          } catch {
-            // Ignore files that can't be stat'd
-          }
-        }
-      }
-    } catch {
-      // Ignore directories that can't be read
-    }
-  };
-
-  walk(docsDir);
-  return result;
-}
+import { findRecentlyModifiedMarkdownFiles } from '../lib/markdown-utils.js';
 
 export default defineWorkflow({
   agent: docsWriterAgent,

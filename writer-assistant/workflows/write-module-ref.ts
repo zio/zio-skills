@@ -4,7 +4,8 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { defineWorkflow } from '@flue/runtime';
 import docsWriterAgent from '../agents/docs-writer.js';
-import { inferSourceDirs } from '../lib/scala-source-discovery.js';
+import { validatePathsAndResolve, inferSourceDirs } from '../lib/scala-source-discovery.js';
+import { findRecentlyModifiedMarkdownFiles } from '../lib/markdown-utils.js';
 import { runResearchPhase } from './phases/research.js';
 import { runReviewPhase } from './phases/review.js';
 import { runStylePhase } from './phases/style.js';
@@ -23,6 +24,7 @@ export interface WriteModuleRefResult {
   status: 'success' | 'partial' | 'failed';
   phasesCompleted: string[];
   success: boolean;
+  error?: string;
   examples: {
     success: boolean;
     moduleName: string;
@@ -84,11 +86,15 @@ async function writeModuleRefRun({ harness, input }: { harness: any; input: any 
   if (!projectRoot) throw new Error('input.projectRoot is required');
   if (!moduleName) throw new Error('input.moduleName is required');
   if (!outputPath) throw new Error('input.outputPath is required');
-  if (!fs.existsSync(projectRoot)) throw new Error(`projectRoot not found: ${projectRoot}`);
 
-  const resolvedOutputPath = path.isAbsolute(outputPath)
-    ? outputPath
-    : path.resolve(projectRoot, outputPath);
+  // validatePathsAndResolve checks projectRoot exists + is a directory, resolves output path,
+  // and creates the parent directory. For hierarchical output (directory path), we also
+  // create the output directory itself.
+  const resolvedOutputPath = validatePathsAndResolve(projectRoot, outputPath);
+  const outputIsDir = outputPath.endsWith('/') || outputPath.endsWith(path.sep);
+  if (outputIsDir) {
+    fs.mkdirSync(resolvedOutputPath, { recursive: true });
+  }
 
   const sourceDirs = inferSourceDirs(projectRoot);
 
@@ -444,42 +450,4 @@ Report final status and any updates made.`;
       },
     };
   }
-}
-
-function findRecentlyModifiedMarkdownFiles(
-  projectRoot: string,
-  docsDir: string,
-  sinceTime: number
-): string[] {
-  if (!fs.existsSync(docsDir)) {
-    return [];
-  }
-
-  const result: string[] = [];
-  const walk = (dir: string) => {
-    try {
-      const entries = fs.readdirSync(dir, { withFileTypes: true });
-      for (const entry of entries) {
-        if (entry.name.startsWith('.')) continue;
-        const fullPath = path.join(dir, entry.name);
-        if (entry.isDirectory()) {
-          walk(fullPath);
-        } else if (entry.isFile() && (entry.name.endsWith('.md') || entry.name.endsWith('.mdx'))) {
-          try {
-            const stat = fs.statSync(fullPath);
-            if (stat.mtimeMs >= sinceTime) {
-              result.push(path.relative(projectRoot, fullPath));
-            }
-          } catch {
-            // ignore
-          }
-        }
-      }
-    } catch {
-      // ignore
-    }
-  };
-
-  walk(docsDir);
-  return result;
 }

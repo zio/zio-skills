@@ -16,6 +16,7 @@ import { verifyBuild } from './phases/verify.js';
 import { runExamplesPhase } from './phases/examples.js';
 import { runBuild } from '../lib/build-runner.js';
 import { createRunMdoc } from '../tools/run_mdoc.js';
+import { findRecentlyModifiedMarkdownFiles } from '../lib/markdown-utils.js';
 
 function parseBuildErrors(output: string): string[] {
   const errors: string[] = [];
@@ -45,44 +46,6 @@ function parseBuildErrors(output: string): string[] {
     }
   }
   return errors;
-}
-
-function findRecentlyModifiedMarkdownFiles(
-  projectRoot: string,
-  docsDir: string,
-  sinceTime: number
-): string[] {
-  if (!fs.existsSync(docsDir)) {
-    return [];
-  }
-
-  const result: string[] = [];
-  const walk = (dir: string) => {
-    try {
-      const entries = fs.readdirSync(dir, { withFileTypes: true });
-      for (const entry of entries) {
-        if (entry.name.startsWith('.')) continue;
-        const fullPath = path.join(dir, entry.name);
-        if (entry.isDirectory()) {
-          walk(fullPath);
-        } else if (entry.isFile() && (entry.name.endsWith('.md') || entry.name.endsWith('.mdx'))) {
-          try {
-            const stat = fs.statSync(fullPath);
-            if (stat.mtimeMs >= sinceTime) {
-              result.push(path.relative(projectRoot, fullPath));
-            }
-          } catch {
-            // Ignore files that can't be stat'd
-          }
-        }
-      }
-    } catch {
-      // Ignore directories that can't be read
-    }
-  };
-
-  walk(docsDir);
-  return result;
 }
 
 export default defineWorkflow({
