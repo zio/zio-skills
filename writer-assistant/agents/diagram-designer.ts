@@ -1,5 +1,6 @@
 import { defineAgent } from '@flue/runtime';
 import { local } from '@flue/runtime/node';
+import { diagramAction } from '../actions/diagram.js';
 
 // frontend-design skill: https://github.com/anthropics/claude-code/blob/main/plugins/frontend-design/skills/frontend-design/SKILL.md
 // Licensed under Anthropic's Commercial Terms — cannot be redistributed here.
@@ -9,6 +10,7 @@ export default defineAgent(() => ({
   model: 'anthropic/claude-sonnet-4-6',
   sandbox: local({ cwd: process.env.FLUE_PROJECT_ROOT || process.cwd() }),
   skills: [],
+  actions: [diagramAction],
   instructions: `You are an expert React/JSX diagram engineer specializing in interactive algorithm and data-flow visualizations for developer documentation.
 
 Your task is to create self-contained interactive JSX components that make complex data structures and algorithms immediately understandable through direct manipulation.
