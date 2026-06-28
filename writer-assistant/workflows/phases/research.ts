@@ -1,5 +1,6 @@
-import { defineAction } from '@flue/runtime';
-import * as v from 'valibot';
+// TODO: This phase needs docsResearcherAgent — a different agent from the calling workflow's primary.
+// Migration: accept FlueHarness for docsResearcherAgent once multi-agent pattern is resolved.
+import docsResearcherAgent from '../../agents/docs-researcher.js';
 
 export type ResearchFocus = 'data-type-ref' | 'tutorial' | 'guide' | 'explanation' | 'diagram';
 
@@ -12,11 +13,22 @@ export interface ResearchConfig {
   focus: ResearchFocus;
 }
 
-export async function runResearchPhase(harness: any, config: ResearchConfig): Promise<string> {
+/**
+ * Run the research phase for a documentation topic in a dedicated researcher agent
+ * Creates its own harness to isolate research context from the writer
+ * Delegates to the docs-research skill for comprehensive research guidance
+ * The skill covers: source discovery, code flow analysis, architecture analysis, and documentation landscape
+ * The focus parameter customizes what insights to emphasize in the research output
+ */
+export async function runResearchPhase(
+  harness: any, // TODO: should be FlueHarness for docsResearcherAgent once multi-agent migrated
+  config: ResearchConfig
+): Promise<string> {
   const { projectRoot, typeName, resolvedOutputPath, sourceDirs, dataTypeInfo, focus } = config;
 
   const sourceDirList = sourceDirs.map((dir, i) => `[${i + 1}] ${dir}`).join('\n  ');
 
+  // Build directive that references the loaded docs-research skill
   let prompt = `**Research Phase: ${getDocumentationTypeLabel(focus)}**
 
 Topic: ${typeName}
@@ -49,35 +61,17 @@ ${getFocusInstruction(focus, typeName)}
 
 Output: Structured research notes (not a formal report) that prepare the documentation writer for Phase 2.`;
 
+  // Set environment variable for agent's sandbox cwd
   process.env.FLUE_PROJECT_ROOT = projectRoot;
 
+  // TODO: harness here is the calling workflow's primary agent harness, NOT docsResearcherAgent.
+  // This will use the wrong agent until multi-agent migration is complete.
+  // Proper fix: accept a dedicated FlueHarness for docsResearcherAgent.
+  void docsResearcherAgent; // suppress unused import warning
   const session = await harness.session('docs-researcher');
   const result = await session.prompt(prompt);
   return result.text || String(result);
 }
-
-export const researchAction = defineAction({
-  name: 'research_docs',
-  description:
-    'Research a documentation topic comprehensively using the docs-research skill. Covers source discovery, code flow analysis, architecture analysis, and documentation landscape.',
-  input: v.object({
-    projectRoot: v.string(),
-    typeName: v.string(),
-    resolvedOutputPath: v.string(),
-    sourceDirs: v.array(v.string()),
-    focus: v.picklist(['data-type-ref', 'tutorial', 'guide', 'explanation', 'diagram'] as const),
-    dataTypeInfo: v.optional(
-      v.object({
-        filePath: v.optional(v.string()),
-        fileName: v.optional(v.string()),
-        typeName: v.optional(v.string()),
-      })
-    ),
-  }),
-  run: (async ({ harness, input }: { harness: any; input: any }) => {
-    return runResearchPhase(harness, input);
-  }) as (ctx: any) => any,
-});
 
 function getDocumentationTypeLabel(focus: ResearchFocus): string {
   const labels: Record<ResearchFocus, string> = {

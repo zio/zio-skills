@@ -1,11 +1,9 @@
 import { defineAgent } from '@flue/runtime';
 import { local } from '@flue/runtime/node';
-import { reviewAction } from '../actions/review.js';
 
 export default defineAgent(() => ({
   model: 'anthropic/claude-haiku-4-5-20251001',
   sandbox: local({ cwd: process.env.FLUE_PROJECT_ROOT || process.cwd() }),
-  actions: [reviewAction],
   instructions: `You are a technical documentation critic specializing in ZIO library documentation.
 
 Your role: Review documentation for technical accuracy, completeness, consistency, and clarity.

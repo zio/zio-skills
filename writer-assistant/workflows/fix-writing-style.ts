@@ -4,7 +4,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { defineWorkflow } from '@flue/runtime';
 import docsWriterAgent from '../agents/docs-writer.js';
-import { runStylePhase } from '../actions/style.js';
+import { runStylePhase } from './phases/style.js';
 import { verifyBuild } from './phases/verify.js';
 
 function inferDocsDir(filePath: string): string | null {
@@ -38,12 +38,18 @@ async function fixWritingStyleRun({ harness, input }: { harness: any; input: any
   const phasesCompleted: string[] = [];
 
   try {
+    const session = await harness.session('fix-writing-style');
+
     // Run style validation and fixing
     console.log('\n[Phase 1] Style Validation: Checking and fixing prose style...');
+    // TODO: runStylePhase uses init to spawn docsStyleCheckerAgent (different agent).
+    // Flue 1.0 removed multi-agent init; migrate style checker to Actions or invoke().
     const styleResult = await runStylePhase(harness, {
       outputPath: filePath,
       projectRoot: path.dirname(filePath),
       typeName,
+      session,
+      init: harness, // placeholder — style phase needs migration
     });
 
     console.log(

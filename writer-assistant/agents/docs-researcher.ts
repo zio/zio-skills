@@ -1,13 +1,11 @@
 import { defineAgent } from '@flue/runtime';
 import { local } from '@flue/runtime/node';
 import docsResearchSkill from '../skills/docs-research/SKILL.md' with { type: 'skill' };
-import { researchAction } from '../actions/research.js';
 
 export default defineAgent(() => ({
   model: 'anthropic/claude-haiku-4-5',
   sandbox: local({ cwd: process.env.FLUE_PROJECT_ROOT || process.cwd() }),
   skills: [docsResearchSkill],
-  actions: [researchAction],
   instructions: `You are a specialized research agent for ZIO documentation.
 
 Your sole task is to thoroughly research a given topic using the docs-research skill.

@@ -8,7 +8,7 @@ import {
   validatePathsAndResolve,
   inferSourceDirs,
 } from '../lib/scala-source-discovery.js';
-import { runResearchPhase } from '../actions/research.js';
+import { runResearchPhase } from './phases/research.js';
 import { runDiagramPhase } from './phases/diagram.js';
 
 export default defineWorkflow({

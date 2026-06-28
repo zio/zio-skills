@@ -4,8 +4,6 @@ import docsDataTypeRefSkill from '../skills/docs-data-type-ref/SKILL.md' with { 
 import docsWritingStyleSkill from '../skills/docs-writing-style/SKILL.md' with { type: 'skill' };
 import docsMdocConventionsSkill from '../skills/docs-mdoc-conventions/SKILL.md' with { type: 'skill' };
 import docsTutorialSkill from '../skills/docs-tutorial/SKILL.md' with { type: 'skill' };
-import { reviewAction } from '../actions/review.js';
-import { styleAction } from '../actions/style.js';
 
 export default defineAgent(() => ({
   model: 'anthropic/claude-haiku-4-5',
@@ -16,7 +14,6 @@ export default defineAgent(() => ({
     docsMdocConventionsSkill,
     docsTutorialSkill,
   ],
-  actions: [reviewAction, styleAction],
   instructions: `You are an expert technical writer specializing in ZIO library documentation.
 
 Your responsibilities:
