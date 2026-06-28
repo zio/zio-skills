@@ -132,6 +132,14 @@ After any significant change, update `README.md` (feature list + quick-start exa
 
 After developing a new workflow or agent, update `AGENT_RUNNING_GUIDE.md` with the new workflow's payload schema and usage example.
 
+## Flue Framework Reference
+
+Flue docs ship with the npm packages. Read them directly — do not rely on training data for Flue API signatures.
+
+- `node_modules/@flue/runtime/docs` — core API: `defineAgent`, `defineWorkflow`, tools, skills, sandboxes, subagents
+- `node_modules/@flue/cli/docs` — CLI usage: `flue run`, `flue docs`, deploy targets
+- `node_modules/@flue/sdk/docs` — SDK: channels, evals, observability, schedules
+
 ## Agents
 
 - Skill-driven (behavior in `skills/*/SKILL.md`)
