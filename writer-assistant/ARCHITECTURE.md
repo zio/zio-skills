@@ -592,20 +592,23 @@ Any phase can be skipped via `skipPhases: string[]`.
 
 ```json
 {
+  "projectRoot": "/path/to/zio",
   "typeName": "Chunk",
-  "docFile": "/path/to/docs/reference/chunk.md",
-  "sourceFile": "/path/to/zio/Chunk.scala"
+  "docFile": "docs/reference/chunk.md",
+  "sourceFile": "core/shared/src/main/scala/zio/Chunk.scala"
 }
 ```
 
 ```json
 {
+  "projectRoot": "/path/to/zio",
   "typeName": "Chunk",
-  "docFile": "/path/to/docs/reference/chunk.md",
-  "membersFile": "/tmp/chunk-members.txt"
+  "docFile": "docs/reference/chunk.md",
+  "membersFile": "tmp/chunk-members.txt"
 }
 ```
 
+- `projectRoot` — absolute path to the project root; all other paths are relative to it.
 - Exactly one of `sourceFile` (triggers extraction) or `membersFile` (skips extraction) must be provided.
 
 **Output:**

@@ -46,46 +46,56 @@ export default defineWorkflow({
 });
 
 async function reportMethodCoverageRun({ input }: { input: any }) {
-  const { typeName, docFile, sourceFile, membersFile } = input as {
+  const { projectRoot, typeName, docFile, sourceFile, membersFile } = input as {
+    projectRoot: string;
     typeName: string;
     docFile: string;
     sourceFile?: string;
     membersFile?: string;
   };
 
+  if (!projectRoot) throw new Error('input.projectRoot is required');
   if (!typeName) throw new Error('input.typeName is required');
   if (!docFile) throw new Error('input.docFile is required');
-  if (!fs.existsSync(docFile)) throw new Error(`docFile not found: ${docFile}`);
+  if (!fs.existsSync(projectRoot)) throw new Error(`projectRoot not found: ${projectRoot}`);
 
-  if (!sourceFile && !membersFile) {
+  // Resolve relative paths against projectRoot
+  const absDocFile = path.resolve(projectRoot, docFile);
+  const absSourceFile = sourceFile ? path.resolve(projectRoot, sourceFile) : undefined;
+  const absMembersFile = membersFile ? path.resolve(projectRoot, membersFile) : undefined;
+
+  if (!fs.existsSync(absDocFile)) throw new Error(`docFile not found: ${absDocFile}`);
+
+  if (!absSourceFile && !absMembersFile) {
     throw new Error('Either input.sourceFile or input.membersFile is required');
   }
-  if (sourceFile && membersFile) {
+  if (absSourceFile && absMembersFile) {
     throw new Error('Provide either input.sourceFile or input.membersFile — not both');
   }
-  if (sourceFile && !fs.existsSync(sourceFile)) {
-    throw new Error(`sourceFile not found: ${sourceFile}`);
+  if (absSourceFile && !fs.existsSync(absSourceFile)) {
+    throw new Error(`sourceFile not found: ${absSourceFile}`);
   }
-  if (membersFile && !fs.existsSync(membersFile)) {
-    throw new Error(`membersFile not found: ${membersFile}`);
+  if (absMembersFile && !fs.existsSync(absMembersFile)) {
+    throw new Error(`membersFile not found: ${absMembersFile}`);
   }
 
   console.log(`[report-method-coverage] Checking coverage for type: ${typeName}`);
+  console.log(`  Project root: ${projectRoot}`);
   console.log(`  Doc file: ${docFile}`);
   if (sourceFile) console.log(`  Source file: ${sourceFile}`);
   if (membersFile) console.log(`  Members file: ${membersFile}`);
 
   const startMs = Date.now();
   let extraction: ReportMethodCoverageResult['memberExtraction'] = null;
-  let resolvedMembersFile = membersFile ?? '';
+  let resolvedMembersFile = absMembersFile ?? '';
   let tempFile: string | null = null;
 
   try {
     // Step 1: Extract members from source file (skipped when membersFile is provided directly)
-    if (sourceFile) {
+    if (absSourceFile) {
       console.log('\n[Step 1] Extracting members from source file...');
 
-      const scriptArgs = ['--json', sourceFile, typeName];
+      const scriptArgs = ['--json', absSourceFile, typeName];
 
       const result = spawnSync('scala-cli', [EXTRACT_SCRIPT, '--', ...scriptArgs], {
         encoding: 'utf8',
@@ -123,7 +133,7 @@ async function reportMethodCoverageRun({ input }: { input: any }) {
         }
       }
 
-      extraction = { success: result.status === 0, sourceFile, ...members };
+      extraction = { success: result.status === 0, sourceFile: absSourceFile, ...members };
 
       // Write members to temp file in the sectioned format expected by check-method-coverage.sh
       const sections: string[] = [];
@@ -153,7 +163,7 @@ async function reportMethodCoverageRun({ input }: { input: any }) {
 
     const coverageResult = spawnSync(
       'bash',
-      [COVERAGE_SCRIPT, '--json', typeName, docFile, resolvedMembersFile],
+      [COVERAGE_SCRIPT, '--json', typeName, absDocFile, resolvedMembersFile],
       { encoding: 'utf8', maxBuffer: 10 * 1024 * 1024 }
     );
 

@@ -348,27 +348,30 @@ Cross-check the public members of a Scala data type against a reference document
 ```bash
 # With sourceFile: extract members from source, then check coverage
 npx flue run report-method-coverage --target node --input '{
+  "projectRoot": "/path/to/zio",
   "typeName": "Chunk",
-  "docFile": "/path/to/docs/reference/chunk.md",
-  "sourceFile": "/path/to/zio/Chunk.scala"
+  "docFile": "docs/reference/chunk.md",
+  "sourceFile": "core/shared/src/main/scala/zio/Chunk.scala"
 }'
 
 # With membersFile: skip extraction, check coverage directly
 npx flue run report-method-coverage --target node --input '{
+  "projectRoot": "/path/to/zio",
   "typeName": "Chunk",
-  "docFile": "/path/to/docs/reference/chunk.md",
-  "membersFile": "/tmp/chunk-members.txt"
+  "docFile": "docs/reference/chunk.md",
+  "membersFile": "tmp/chunk-members.txt"
 }'
 ```
 
 **Steps:** (1) Member extraction via `scala-cli extract-members.scala` → (2) Coverage check via `bash check-method-coverage.sh`
 
-| Parameter     | Required | Description                                                                |
-| ------------- | -------- | -------------------------------------------------------------------------- |
-| `typeName`    | yes      | Scala type name, e.g. `"Chunk"`, `"Reader"`, `"Schema"`                    |
-| `docFile`     | yes      | Absolute path to the reference `.md` documentation page                    |
-| `sourceFile`  | one of   | Path to `.scala` source file — triggers member extraction with `scala-cli` |
-| `membersFile` | one of   | Path to a pre-extracted members file — skips the extraction step           |
+| Parameter     | Required | Description                                                                                          |
+| ------------- | -------- | ---------------------------------------------------------------------------------------------------- |
+| `projectRoot` | yes      | Absolute path to the project root — all other paths are relative to this                             |
+| `typeName`    | yes      | Scala type name, e.g. `"Chunk"`, `"Reader"`, `"Schema"`                                              |
+| `docFile`     | yes      | Path to the reference `.md` doc, relative to `projectRoot`                                           |
+| `sourceFile`  | one of   | Path to `.scala` source file relative to `projectRoot` — triggers member extraction with `scala-cli` |
+| `membersFile` | one of   | Path to pre-extracted members file relative to `projectRoot` — skips the extraction step             |
 
 **Note:** `sourceFile` and `membersFile` are mutually exclusive — provide exactly one.
 
