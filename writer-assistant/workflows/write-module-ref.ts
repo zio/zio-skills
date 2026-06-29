@@ -91,7 +91,8 @@ async function writeModuleRefRun({ harness, input }: { harness: any; input: any 
   // and creates the parent directory. For hierarchical output (directory path), we also
   // create the output directory itself.
   const resolvedOutputPath = validatePathsAndResolve(projectRoot, outputPath);
-  const outputIsDir = outputPath.endsWith('/') || outputPath.endsWith(path.sep);
+  const outputIsDir =
+    outputPath.endsWith('/') || outputPath.endsWith(path.sep) || structure === 'hierarchical';
   if (outputIsDir) {
     fs.mkdirSync(resolvedOutputPath, { recursive: true });
   }
