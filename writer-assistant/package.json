@@ -9,7 +9,7 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.104.2",
-    "@flue/runtime": "^1.0.0-beta.7",
+    "@flue/runtime": "^1.0.0-beta.8",
     "dotenv": "^17.4.2",
     "valibot": "^1.4.1"
   },
@@ -17,7 +17,7 @@
     "typebox": "^1.2.0"
   },
   "devDependencies": {
-    "@flue/cli": "^1.0.0-beta.7",
+    "@flue/cli": "^1.0.0-beta.8",
     "@types/node": "^25.9.3",
     "@typescript-eslint/eslint-plugin": "^8.61.1",
     "@typescript-eslint/parser": "^8.61.1",
