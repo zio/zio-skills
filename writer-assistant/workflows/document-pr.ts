@@ -62,7 +62,9 @@ async function documentPrRun({ harness, input }: { harness: any; input: any }) {
     if (skipPhases.includes('collect')) {
       console.log('\n[Phase 1] ⏭ Collect skipped');
       if (!prData) {
-        console.warn('[Phase 1] Warning: prData is empty — collect skipped with no pre-supplied data; Phase 2 will have no PR context');
+        console.warn(
+          '[Phase 1] Warning: prData is empty — collect skipped with no pre-supplied data; Phase 2 will have no PR context'
+        );
       }
       phasesCompleted.push('collect');
     } else {
@@ -115,7 +117,9 @@ Return a structured summary with:
     if (skipPhases.includes('decide')) {
       console.log('\n[Phase 2] ⏭ Decide skipped');
       if (!decisionInput) {
-        console.warn('[Phase 2] Warning: decide skipped with no pre-supplied decision; write phase will use default "no-docs-needed"');
+        console.warn(
+          '[Phase 2] Warning: decide skipped with no pre-supplied decision; write phase will use default "no-docs-needed"'
+        );
       }
       phasesCompleted.push('decide');
     } else {
