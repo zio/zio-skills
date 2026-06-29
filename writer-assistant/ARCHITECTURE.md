@@ -371,7 +371,7 @@ Any phase can be skipped via `skipPhases: string[]`.
 
 **Output:** Markdown file(s) with module narrative, type-relationship diagram, per-type API coverage, and integration examples.
 
-### 3.5. Write Examples Workflow (`workflows/write-examples.ts`)
+### 3.6. Write Examples Workflow (`workflows/write-examples.ts`)
 
 **Purpose:** Generate companion Scala example sub-modules for any documentation article. Runs standalone or is invoked as Phase 2.5 by `write-data-type-ref` and `write-tutorial` when `examples` payload is present.
 
@@ -412,7 +412,7 @@ Any phase can be skipped via `skipPhases: string[]`.
 
 **Shared Phase:** The core logic lives in `workflows/phases/examples.ts` (`runExamplesPhase`), which accepts an optional `session` parameter. When called from `write-data-type-ref` or `write-tutorial`, the existing writer session is reused — no extra agent spawn.
 
-### 3.5. Check Website Workflow (`workflows/check-website.ts`)
+### 3.7. Check Website Workflow (`workflows/check-website.ts`)
 
 **Purpose:** Verify the full documentation website builds successfully. No agent — pure shell. Read-only; suitable as a standalone CI validation step.
 
@@ -422,7 +422,7 @@ Any phase can be skipped via `skipPhases: string[]`.
 
 Delegates to `lib/build-runner.ts` which auto-detects Docusaurus / MkDocs / Sphinx and for ZIO projects runs the full pipeline (`sbt docs/mdoc → yarn install → yarn build`).
 
-### 3.6. Preview Website Workflow (`workflows/preview-website.ts`)
+### 3.8. Preview Website Workflow (`workflows/preview-website.ts`)
 
 **Purpose:** Start a live documentation dev server in the background and return once ready.
 
@@ -445,7 +445,7 @@ Delegates to `lib/build-runner.ts` which auto-detects Docusaurus / MkDocs / Sphi
 
 The server keeps running after the workflow exits. Stop it with `kill <pid>`.
 
-### 3.8. Fix Website Workflow (`workflows/fix-website.ts`)
+### 3.9. Fix Website Workflow (`workflows/fix-website.ts`)
 
 **Purpose:** Build the documentation website and automatically fix errors. Mirrors `fix-mdoc` pattern. Uses `docsWriterAgent` session for fixes; loops up to `maxRounds` (default 3).
 
@@ -458,7 +458,7 @@ The server keeps running after the workflow exits. Stop it with `kill <pid>`.
 1. **Initial Check** — Run `runBuild(docsDir)`; return early if already passing
 2. **Fix Loop** (up to `maxRounds`) — Prompt writer agent with error list → agent reads/fixes files → rebuild → re-check errors
 
-### 3.9. Extract Metadata Workflow (`workflows/extract-metadata.ts`)
+### 3.10. Extract Metadata Workflow (`workflows/extract-metadata.ts`)
 
 **Purpose:** Extract or generate metadata (title, description, keywords) for documentation pages.
 
@@ -481,7 +481,7 @@ keywords: ['keyword1', 'keyword2']
 ---
 ```
 
-### 3.10. Fix Writing Style Workflow (`workflows/fix-writing-style.ts`)
+### 3.11. Fix Writing Style Workflow (`workflows/fix-writing-style.ts`)
 
 **Purpose:** Validate and fix documentation for style compliance.
 
@@ -500,7 +500,7 @@ keywords: ['keyword1', 'keyword2']
 
 **Output:** Updated .md file with style improvements + build verification result.
 
-### 3.9. Check mdoc Workflow (`workflows/check-mdoc.ts`)
+### 3.12. Check mdoc Workflow (`workflows/check-mdoc.ts`)
 
 **Purpose:** Compile and validate mdoc code blocks in documentation files. No agent — pure `execSync`. Read-only checker; suitable as a standalone CI validation step.
 
@@ -535,7 +535,7 @@ Each error entry: `{ file, line, message, raw }`.
 - Missing paths → throws with list of unresolved entries
 - Build failure → returns `success: false` with parsed errors (does not throw)
 
-### 3.10. Fix mdoc Workflow (`workflows/fix-mdoc.ts`)
+### 3.13. Fix mdoc Workflow (`workflows/fix-mdoc.ts`)
 
 **Purpose:** Compile mdoc code blocks, and if errors are found, automatically fix them using the docs-writer agent. Loops up to `maxRounds` (default 3).
 

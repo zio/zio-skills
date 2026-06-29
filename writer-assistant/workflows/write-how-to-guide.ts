@@ -192,7 +192,7 @@ Write the complete markdown file and save it to the specified output path.`;
           topic,
           docType: 'how-to-guide',
           outputDocPath: resolvedOutputPath,
-          session: session!,
+          session: session ?? undefined,
         });
         console.log(
           `[Phase 2.5] ${examplesResult.success ? '✓' : '⚠'} Examples phase complete ` +
