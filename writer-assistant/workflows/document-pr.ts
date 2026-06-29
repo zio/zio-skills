@@ -50,12 +50,12 @@ async function documentPrRun({ harness, input }: { harness: any; input: any }) {
   let integratedIntoSidebar = false;
   let lintPassed: boolean | null = null;
   let writeRan = false;
+  let writeStartTime = 0;
 
   console.log(`[document-pr] Documenting PR #${prStr}`);
   console.log(`  Project root: ${projectRoot}`);
 
   process.env.FLUE_PROJECT_ROOT = projectRoot;
-  const writeStartTime = Date.now();
 
   try {
     // Phase 1: Collect PR Data
@@ -257,6 +257,7 @@ Requirements:
 Edit the existing page file.`;
       }
 
+      writeStartTime = Date.now();
       await writerSession.prompt(writePrompt);
       writeRan = true;
       console.log('[Phase 3] ✓ Documentation written');
@@ -267,7 +268,7 @@ Edit the existing page file.`;
     if (skipPhases.includes('integrate')) {
       console.log('\n[Phase 4] ⏭ Integrate skipped');
       phasesCompleted.push('integrate');
-    } else if (decision === 'new-reference-page' || decision === 'new-how-to-guide') {
+    } else if (writeRan && (decision === 'new-reference-page' || decision === 'new-how-to-guide')) {
       console.log('\n[Phase 4] Integrate: Wiring new page into Docusaurus site...');
       const integrateSession = await harness.session('document-pr-integrate');
 
