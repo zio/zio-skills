@@ -140,6 +140,14 @@ Flue docs ship with the npm packages. Read them directly — do not rely on trai
 - `node_modules/@flue/cli/docs` — CLI usage: `flue run`, `flue docs`, deploy targets
 - `node_modules/@flue/sdk/docs` — SDK: channels, evals, observability, schedules
 
+Alternatively you can use `flue docs` to get/search documentation pages of flue project:
+
+```
+flue docs                  List all documentation pages
+flue docs read <path>      Print a documentation page as markdown
+flue docs search <query>   Search the documentation (JSON results)
+```
+
 ## Agents
 
 - Skill-driven (behavior in `skills/*/SKILL.md`)

@@ -32,6 +32,7 @@ writer-assistant/
 │   ├── write-examples.ts        # Companion Scala example generation (standalone)
 │   ├── extract-metadata.ts      # Metadata extraction workflow
 │   ├── fix-writing-style.ts     # Writing style fixing workflow (2 phases)
+│   ├── organize-types.ts        # Sidebar categorization workflow — manual or auto (4 phases)
 │   ├── check-mdoc.ts            # mdoc compilation checker (no agent, pure execSync, read-only)
 │   ├── fix-mdoc.ts              # mdoc compiler + fixer (writer agent fixer loop)
 │   ├── check-website.ts         # Full website build checker (no agent, read-only)
@@ -535,7 +536,49 @@ Each error entry: `{ file, line, message, raw }`.
 - Missing paths → throws with list of unresolved entries
 - Build failure → returns `success: false` with parsed errors (does not throw)
 
-### 3.13. Fix mdoc Workflow (`workflows/fix-mdoc.ts`)
+### 3.13. Organize Types Workflow (`workflows/organize-types.ts`)
+
+**Purpose:** Organize related data types into logical sidebar categories in `sidebars.js` — creating `index.md` files per category and updating sidebar entries. Supports two modes: manual (specify types and category) or automatic (scan all types and propose groupings by confidence).
+
+**Modes:**
+
+| Mode | Input | Behavior |
+|---|---|---|
+| Manual | `{ types, category }` | Validate types exist, create index.md, update sidebars.js |
+| Auto | `{ auto: true, minConfidence? }` | Scan docs/reference/, propose groupings, apply at or above confidence threshold |
+
+**Phases:**
+
+1. **Prepare Phase** — Manual: validate each type has a .md file in docs/reference/, read sidebars.js structure. Auto: scan all docs/reference/ .md files, extract titles/descriptions/cross-references, report relationship map
+2. **Organize Phase** — Manual: create `docs/reference/<category-kebab>/index.md` with introduction + type list, update sidebars.js with category entry in alphabetical order. Auto: propose groupings with confidence levels, apply HIGH/MEDIUM/LOW based on `minConfidence`, create index.md per approved category, update sidebars.js, report skipped proposals
+3. **Verify Phase** — Run `node -e "require('./sidebars.js')"` to validate JavaScript syntax; if it fails, fix the specific issue and re-verify (max 3 attempts)
+4. **Build Verification Phase** — Run docs build; on failure, spawns writer agent to fix broken links/missing sidebar entries and retries up to 3 rounds; skip gracefully if no build system detected
+
+Any phase can be skipped via `skipPhases: string[]`.
+
+**Input:**
+
+```json
+{
+  "projectRoot": "/path/to/project",
+  "types": ["chunk", "list", "vector"],
+  "category": "Collections"
+}
+```
+
+```json
+{
+  "projectRoot": "/path/to/project",
+  "auto": true,
+  "minConfidence": "high"
+}
+```
+
+**Key design:** The skill's interactive "User Confirmation" step (auto mode) is replaced by the `minConfidence` threshold — the agent applies all proposals that meet or exceed the threshold and reports skipped ones. This makes the workflow fully autonomous while remaining controllable.
+
+**Output:** Updated `sidebars.js` + new `docs/reference/<category>/index.md` file(s) per approved category.
+
+### 3.14. Fix mdoc Workflow (`workflows/fix-mdoc.ts`)
 
 **Purpose:** Compile mdoc code blocks, and if errors are found, automatically fix them using the docs-writer agent. Loops up to `maxRounds` (default 3).
 

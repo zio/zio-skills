@@ -308,6 +308,39 @@ npx flue run write-tutorial --target node --input '{
 - Warm, welcoming tone
 - 38-item checklist verification in Phase 3
 
+### Organize Types
+
+Group related data types into logical sidebar categories. Two modes: manual (specify types and category) or automatic (scan all types, propose groupings by confidence).
+
+```bash
+# Manual mode — group specific types into a named category
+npx flue run organize-types --target node --input '{
+  "projectRoot": "/path/to/zio-http",
+  "types": ["chunk", "list", "vector"],
+  "category": "Collections"
+}'
+
+# Auto mode — scan all types and apply high-confidence groupings
+npx flue run organize-types --target node --input '{
+  "projectRoot": "/path/to/zio-http",
+  "auto": true,
+  "minConfidence": "high"
+}'
+```
+
+**Phases:** Prepare → Organize → Verify → Build Verify
+
+| Parameter       | Required | Description                                                                                              |
+| --------------- | -------- | -------------------------------------------------------------------------------------------------------- |
+| `projectRoot`   | yes      | Absolute path to the ZIO project root                                                                    |
+| `types`         | manual   | Array of type names, e.g. `["chunk", "list", "vector"]` — must have corresponding .md files             |
+| `category`      | manual   | Category label, e.g. `"Collections"` — becomes sidebar label and index.md title                         |
+| `auto`          | auto     | `true` to trigger automatic scan-and-categorize mode                                                     |
+| `minConfidence` | no       | Auto mode only: `"high"` (default), `"medium"`, or `"low"` — threshold for applying proposals           |
+| `skipPhases`    | no       | Array of phase names to skip: `"prepare"`, `"organize"`, `"verify"`, `"verifyBuild"`                    |
+
+**Note:** Manual mode and auto mode are mutually exclusive — use `{types, category}` OR `{auto: true}`, never both.
+
 ### Write How-To Guide
 
 Create goal-oriented guides that help readers accomplish a specific task.
