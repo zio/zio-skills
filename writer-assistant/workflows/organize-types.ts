@@ -80,6 +80,12 @@ async function organizeTypesRun({ harness, input }: { harness: any; input: any }
   const sidebarsPath = path.join(docsDir, 'sidebars.js');
   // Normalize type names to lowercase so sidebar paths match actual filenames (e.g. "Chunk" → "chunk")
   const normalizedTypes = types?.map((t) => t.toLowerCase());
+  // Hoist sidebars existence check so both Phase 1 and Phase 2 prompts can reference it
+  const { existsSync } = await import('node:fs');
+  const sidebarsExists = existsSync(sidebarsPath);
+  const sidebarsNote = sidebarsExists
+    ? `The file \`${sidebarsPath}\` exists — read it to understand the current structure.`
+    : `The file \`${sidebarsPath}\` does NOT exist yet. Create a minimal valid sidebars.js skeleton before adding any category entries.`;
   const phasesCompleted: string[] = [];
 
   console.log(`[organize-types] Starting sidebar organization (${mode} mode)`);
@@ -108,12 +114,6 @@ async function organizeTypesRun({ harness, input }: { harness: any; input: any }
       phasesCompleted.push('prepare');
     } else {
       console.log('\n[Phase 1] Prepare: Analyzing current docs structure...');
-
-      const { existsSync } = await import('node:fs');
-      const sidebarsExists = existsSync(sidebarsPath);
-      const sidebarsNote = sidebarsExists
-        ? `The file \`${sidebarsPath}\` exists — read it to understand the current structure.`
-        : `The file \`${sidebarsPath}\` does NOT exist yet. In Phase 2 you will need to create a minimal valid sidebars.js skeleton before adding any category entries.`;
 
       let preparePrompt: string;
       if (mode === 'manual') {
@@ -268,6 +268,8 @@ Based on your Phase 1 analysis, propose and apply category groupings.
   ]
 }
 \`\`\`
+
+**Sidebar file status:** ${sidebarsNote}
 
 **Instructions:**
 1. Propose all category groupings with confidence levels
