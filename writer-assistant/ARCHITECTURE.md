@@ -542,10 +542,10 @@ Each error entry: `{ file, line, message, raw }`.
 
 **Modes:**
 
-| Mode | Input | Behavior |
-|---|---|---|
-| Manual | `{ types, category }` | Validate types exist, create index.md, update sidebars.js |
-| Auto | `{ auto: true, minConfidence? }` | Scan docs/reference/, propose groupings, apply at or above confidence threshold |
+| Mode   | Input                            | Behavior                                                                        |
+| ------ | -------------------------------- | ------------------------------------------------------------------------------- |
+| Manual | `{ types, category }`            | Validate types exist, create index.md, update sidebars.js                       |
+| Auto   | `{ auto: true, minConfidence? }` | Scan docs/reference/, propose groupings, apply at or above confidence threshold |
 
 **Phases:**
 

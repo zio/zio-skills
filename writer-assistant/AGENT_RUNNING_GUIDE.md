@@ -330,14 +330,14 @@ npx flue run organize-types --target node --input '{
 
 **Phases:** Prepare → Organize → Verify → Build Verify
 
-| Parameter       | Required | Description                                                                                              |
-| --------------- | -------- | -------------------------------------------------------------------------------------------------------- |
-| `projectRoot`   | yes      | Absolute path to the ZIO project root                                                                    |
-| `types`         | manual   | Array of type names, e.g. `["chunk", "list", "vector"]` — must have corresponding .md files             |
-| `category`      | manual   | Category label, e.g. `"Collections"` — becomes sidebar label and index.md title                         |
-| `auto`          | auto     | `true` to trigger automatic scan-and-categorize mode                                                     |
-| `minConfidence` | no       | Auto mode only: `"high"` (default), `"medium"`, or `"low"` — threshold for applying proposals           |
-| `skipPhases`    | no       | Array of phase names to skip: `"prepare"`, `"organize"`, `"verify"`, `"verifyBuild"`                    |
+| Parameter       | Required | Description                                                                                   |
+| --------------- | -------- | --------------------------------------------------------------------------------------------- |
+| `projectRoot`   | yes      | Absolute path to the ZIO project root                                                         |
+| `types`         | manual   | Array of type names, e.g. `["chunk", "list", "vector"]` — must have corresponding .md files   |
+| `category`      | manual   | Category label, e.g. `"Collections"` — becomes sidebar label and index.md title               |
+| `auto`          | auto     | `true` to trigger automatic scan-and-categorize mode                                          |
+| `minConfidence` | no       | Auto mode only: `"high"` (default), `"medium"`, or `"low"` — threshold for applying proposals |
+| `skipPhases`    | no       | Array of phase names to skip: `"prepare"`, `"organize"`, `"verify"`, `"verifyBuild"`          |
 
 **Note:** Manual mode and auto mode are mutually exclusive — use `{types, category}` OR `{auto: true}`, never both.
 
