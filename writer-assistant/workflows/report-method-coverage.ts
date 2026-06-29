@@ -147,7 +147,7 @@ async function reportMethodCoverageRun({ input }: { input: any }) {
         sections.push('=== Inherited Methods ===\n' + members.inherited.join('\n'));
       }
 
-      tempFile = path.join(os.tmpdir(), `coverage-members-${process.pid}.txt`);
+      tempFile = path.join(os.tmpdir(), `coverage-members-${crypto.randomUUID()}.txt`);
       fs.writeFileSync(tempFile, sections.join('\n\n') + '\n', 'utf8');
       resolvedMembersFile = tempFile;
 
