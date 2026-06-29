@@ -308,6 +308,35 @@ npx flue run write-tutorial --target node --input '{
 - Warm, welcoming tone
 - 38-item checklist verification in Phase 3
 
+### Write How-To Guide
+
+Create goal-oriented guides that help readers accomplish a specific task.
+
+```bash
+npx flue run write-how-to-guide --target node --input '{
+  "projectRoot": "/path/to/zio",
+  "outputPath": "docs/guides/handle-errors-with-zio.md",
+  "topic": "How to handle errors with ZIO"
+}'
+```
+
+**Phases:** Research → Write → Verify → Integrate → Review → Style → Build Verify
+
+**Key differences from write-tutorial:**
+
+- Emphasizes 8-section structure (Introduction, The Problem, Prerequisites, Core Model, Step-by-step sections, Putting Together, Running Examples, Going Further)
+- Goal-oriented prose — direct and imperative, not warm/pedagogical
+- Problem section mandatory with "before" code example
+- How-to guide checklist verification in Phase 3
+
+| Parameter     | Required | Description                                                                                                              |
+| ------------- | -------- | ------------------------------------------------------------------------------------------------------------------------ |
+| `projectRoot` | yes      | Absolute path to the ZIO project root                                                                                    |
+| `outputPath`  | yes      | Relative path, e.g. `docs/guides/handle-errors-with-zio.md`                                                              |
+| `topic`       | yes      | Guide topic description, e.g. `"How to handle errors with ZIO"`                                                          |
+| `examples`    | no       | `{ "moduleName": "...", "packageName": "...", "parentModule": "..." }` — companion examples                              |
+| `skipPhases`  | no       | Array of phase names to skip: `"research"`, `"write"`, `"verify"`, `"integrate"`, `"review"`, `"style"`, `"verifyBuild"` |
+
 ### Write Module Reference
 
 Generate comprehensive reference documentation for a module containing multiple related data types.

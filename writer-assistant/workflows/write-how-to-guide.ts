@@ -241,10 +241,17 @@ Verify the how-to guide you just wrote for ${topic} at ${resolvedOutputPath}
    - Check that there is no conceptual preamble before The Problem section
    - Ensure intermediate results are shown after major steps
    - Verify no blank lines between consecutive code blocks
+   - Confirm the output file is under docs/guides/ (not docs/reference/ or docs/tutorials/)
+
+4. **Review CHECKLIST.md**
+   - Use the checklist in the docs-how-to-guide skill to self-verify all items
+   - Focus on Content Quality, Technical Accuracy, and Companion Examples sections
+   - Fix any violations found before reporting complete
 
 Report:
 - Structure compliance status
 - Final mdoc error count (should be 0)
+- CHECKLIST status
 - Any fixes applied`;
 
       await session!.prompt(verifyPrompt, {
@@ -395,7 +402,7 @@ Report final status and any updates made.`;
           console.log(`[Phase 7] Found ${currentErrors.length} error(s), starting fix loop`);
 
           if (!session) {
-            session = await harness.session('fix-build-errors');
+            session = await harness.session('fix-website-build-errors');
           }
 
           let round = 0;
