@@ -26,6 +26,7 @@ writer-assistant/
 ├── workflows/                    # Workflow orchestrators
 │   ├── crossref.ts              # Cross-reference linking workflow (6 modes)
 │   ├── write-data-type-ref.ts   # API reference documentation generation (7-8 phases)
+│   ├── write-module-ref.ts      # Module reference documentation generation (7-8 phases)
 │   ├── write-tutorial.ts        # Tutorial documentation generation (7-8 phases)
 │   ├── write-examples.ts        # Companion Scala example generation (standalone)
 │   ├── extract-metadata.ts      # Metadata extraction workflow
@@ -66,6 +67,7 @@ writer-assistant/
 │   ├── auto-fixer.ts            # Automated error fixing
 │   ├── build-error-extractor.ts # Parse build output for errors
 │   ├── scala-source-discovery.ts # Scala source code finding
+│   ├── markdown-utils.ts        # Shared markdown file utilities (findRecentlyModifiedMarkdownFiles)
 │   └── migrate-state.ts         # State format migration
 │
 ├── tools/                       # Flue tools for agents
@@ -80,8 +82,10 @@ writer-assistant/
 │   ├── docs-tutorial/
 │   │   ├── SKILL.md             # Tutorial writing structure and tone
 │   │   └── CHECKLIST.md         # 38-item verification checklist
+│   ├── docs-module-ref/
+│   │   └── SKILL.md             # Module reference documentation structure
 │   ├── docs-research/
-│   │   └── SKILL.md             # Research methodology (supports 4 doc types)
+│   │   └── SKILL.md             # Research methodology (supports 5 doc types incl. module-ref)
 │   ├── docs-writing-style/
 │   │   ├── SKILL.md             # Prose style rules
 │   │   └── check-docs-style.sh  # Mechanical rule checker
@@ -282,7 +286,43 @@ Any phase can be skipped via `skipPhases: string[]` — useful for re-running on
 - Complete runnable example
 - Self-contained example files
 
-### 3.4. Write Examples Workflow (`workflows/write-examples.ts`)
+### 3.4. Write Module Reference Workflow (`workflows/write-module-ref.ts`)
+
+**Purpose:** Generate comprehensive reference documentation for a module — a cohesive set of related data types that work together as a system.
+
+**Phases:**
+
+1. **Research Phase** — Map all core and supporting types, their relationships, data flow patterns, and composition examples
+2. **Write Phase** — Generate module-level narrative (How They Work Together, Common Patterns, Integration Points) + type-level coverage; agent decides flat vs hierarchical structure based on skill rule unless overridden
+3. _(optional)_ **Examples Phase** — Create companion Scala sub-module with multi-type composition examples (activated by `examples` payload field)
+4. _(optional)_ **Diagram Phase** — Generate interactive JSX diagram of type relationships (activated by `diagram` payload field)
+5. **Verify Phase** — Check method coverage across all core types, compile all mdoc examples to zero errors
+6. **Integrate Phase** — Update sidebars.js (flat entry or hierarchical category), docs/index.md, cross-references
+7. **Review Phase** — Critic→fixer loop for content accuracy (max 5 rounds)
+8. **Style Phase** — Mechanical + LLM prose style validation and fixing
+9. **Build Verification Phase** — Run docs build; skip gracefully if no build system detected
+
+**Flat vs Hierarchical:**
+
+| Module shape                                               | Output                                                                 |
+| ---------------------------------------------------------- | ---------------------------------------------------------------------- |
+| ≤ 4 core types, or types always used together              | **Flat** — `docs/reference/<module>.md`                                |
+| ≥ 5 core types, OR ≥ 3 types with rich self-contained APIs | **Hierarchical** — `docs/reference/<module>/index.md` + per-type pages |
+
+**Input:**
+
+```json
+{
+  "projectRoot": "/path/to/project",
+  "moduleName": "http-model",
+  "outputPath": "docs/reference/http-model.md",
+  "structure": "flat"
+}
+```
+
+**Output:** Markdown file(s) with module narrative, type-relationship diagram, per-type API coverage, and integration examples.
+
+### 3.5. Write Examples Workflow (`workflows/write-examples.ts`)
 
 **Purpose:** Generate companion Scala example sub-modules for any documentation article. Runs standalone or is invoked as Phase 2.5 by `write-data-type-ref` and `write-tutorial` when `examples` payload is present.
 
@@ -645,6 +685,7 @@ type LinkSuggestion = {
 **Skills:**
 
 - `skills/docs-data-type-ref/SKILL.md` — API reference structure
+- `skills/docs-module-ref/SKILL.md` — Module reference structure (multi-type)
 - `skills/docs-tutorial/SKILL.md` — Tutorial structure and tone
 - `skills/docs-writing-style/SKILL.md` — Prose style rules
 - `skills/docs-mdoc-conventions/SKILL.md` — mdoc modifier reference
@@ -728,8 +769,9 @@ Skills are stored as markdown files (`SKILL.md`) in `skills/*/` directories. Eac
 
 - **cross-linker** — Identify cross-linking opportunities, select anchor text, determine confidence
 - **docs-data-type-ref** — Structure API documentation, organize methods, create examples
+- **docs-module-ref** — Structure module reference docs; flat vs hierarchical decision rule; module-level narrative + per-type coverage
 - **docs-tutorial** — Structure learning-oriented guides, 7-section template, warm tone, linear progression
-- **docs-research** — Gather code information, extract signatures, find usage (supports: data-type-ref, tutorial, guide, explanation)
+- **docs-research** — Gather code information, extract signatures, find usage (supports: data-type-ref, tutorial, guide, explanation, module-ref)
 - **docs-writing-style** — Prose style rules, clarity, tone, terminology, code block conventions
 - **docs-mdoc-conventions** — mdoc modifier reference, decision tree, Scala 2/3 tabs, admonitions
 - **metadata-extractor** — Extract title, description, keywords from content

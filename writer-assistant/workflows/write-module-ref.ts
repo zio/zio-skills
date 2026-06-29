@@ -4,7 +4,11 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { defineWorkflow } from '@flue/runtime';
 import docsWriterAgent from '../agents/docs-writer.js';
-import { validatePathsAndResolve, inferSourceDirs } from '../lib/scala-source-discovery.js';
+import {
+  toKebabCase,
+  validatePathsAndResolve,
+  inferSourceDirs,
+} from '../lib/scala-source-discovery.js';
 import { findRecentlyModifiedMarkdownFiles } from '../lib/markdown-utils.js';
 import { runResearchPhase } from './phases/research.js';
 import { runReviewPhase } from './phases/review.js';
@@ -288,7 +292,7 @@ Finalize the documentation for the \`${moduleName}\` module and integrate it int
    - Verify all lint checks pass
 
 3. **Update sidebars.js** (if it exists)
-   - **Flat structure:** Add \`{ type: "doc", id: "reference/${moduleName}" }\` entry
+   - **Flat structure:** Add \`{ type: "doc", id: "reference/${toKebabCase(moduleName)}" }\` entry
    - **Hierarchical structure:** Add a category entry with link to index and items for each type page
 
 4. **Update docs/index.md** (if it exists)
