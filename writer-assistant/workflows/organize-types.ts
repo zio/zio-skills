@@ -78,12 +78,14 @@ async function organizeTypesRun({ harness, input }: { harness: any; input: any }
   const mode = isAuto ? 'auto' : 'manual';
   const docsDir = path.join(projectRoot, 'docs');
   const sidebarsPath = path.join(docsDir, 'sidebars.js');
+  // Normalize type names to lowercase so sidebar paths match actual filenames (e.g. "Chunk" → "chunk")
+  const normalizedTypes = types?.map((t) => t.toLowerCase());
   const phasesCompleted: string[] = [];
 
   console.log(`[organize-types] Starting sidebar organization (${mode} mode)`);
   console.log(`  Project root: ${projectRoot}`);
   if (mode === 'manual') {
-    console.log(`  Types: ${types!.join(', ')}`);
+    console.log(`  Types: ${normalizedTypes!.join(', ')}`);
     console.log(`  Category: ${category}`);
   } else {
     console.log(`  Min confidence: ${minConfidence}`);
@@ -92,7 +94,13 @@ async function organizeTypesRun({ harness, input }: { harness: any; input: any }
   try {
     process.env.FLUE_PROJECT_ROOT = projectRoot;
 
-    const session = await harness.session('organize-types');
+    // Only create session if at least one phase that needs it will run
+    const sessionPhases = ['prepare', 'organize', 'verify'];
+    const needsSession = sessionPhases.some((p) => !skipPhases.includes(p));
+    let session: any = null;
+    if (needsSession) {
+      session = await harness.session('organize-types');
+    }
 
     // Phase 1: Prepare — validate types (manual) or scan all docs (auto)
     if (skipPhases.includes('prepare')) {
@@ -101,18 +109,24 @@ async function organizeTypesRun({ harness, input }: { harness: any; input: any }
     } else {
       console.log('\n[Phase 1] Prepare: Analyzing current docs structure...');
 
+      const { existsSync } = await import('node:fs');
+      const sidebarsExists = existsSync(sidebarsPath);
+      const sidebarsNote = sidebarsExists
+        ? `The file \`${sidebarsPath}\` exists — read it to understand the current structure.`
+        : `The file \`${sidebarsPath}\` does NOT exist yet. In Phase 2 you will need to create a minimal valid sidebars.js skeleton before adding any category entries.`;
+
       let preparePrompt: string;
       if (mode === 'manual') {
         preparePrompt = `**Phase 1: Validate Types for Manual Categorization**
 
 Validate each type in the list below by checking for a corresponding .md file in ${docsDir}/reference/.
 
-Types to validate: ${types!.join(', ')}
+Types to validate: ${normalizedTypes!.join(', ')}
 
 Steps:
-1. For each type name, check if \`${docsDir}/reference/<type-name>.md\` exists
-2. Read \`${sidebarsPath}\` to understand the current sidebar structure — specifically the Reference section
-3. Check whether a category named "${category}" already exists in sidebars.js
+1. For each type name, check if \`${docsDir}/reference/<type-name>.md\` exists (filenames are lowercase)
+2. ${sidebarsNote}
+3. If sidebars.js exists, check whether a category named "${category}" already exists
 
 Report:
 - Which types were found (file exists)
@@ -131,18 +145,20 @@ For each file found:
 3. Read the first 2-3 sentences of the body (after frontmatter) as the type description
 4. Find any cross-references to other types (links in format \`[TypeName](./type-name.md)\`)
 
-Also read \`${sidebarsPath}\` to understand which types are already in categories vs. uncategorized.
+${sidebarsNote}
+${sidebarsExists ? 'Also note which types are already in categories vs. uncategorized.' : ''}
 
 Build and report a summary:
 - Total types found
 - List of type names with titles and 1-sentence descriptions
 - Cross-reference relationship map (type A links to type B)
 - Types already in categories vs. types that are uncategorized
+- Whether sidebars.js exists (relevant for Phase 2)
 
 This analysis guides Phase 2.`;
       }
 
-      await session.prompt(preparePrompt);
+      await session!.prompt(preparePrompt);
       console.log('[Phase 1] ✓ Prepare complete');
       phasesCompleted.push('prepare');
     }
@@ -165,7 +181,7 @@ This analysis guides Phase 2.`;
         organizePrompt = `**Phase 2: Apply Manual Categorization**
 
 Category: ${category}
-Types to group: ${types!.join(', ')}
+Types to group: ${normalizedTypes!.join(', ')}
 
 Apply these changes now:
 
@@ -194,14 +210,16 @@ Extract each type's description from its \`${docsDir}/reference/<type-name>.md\`
 
 **Step 2: Update \`${sidebarsPath}\`**
 
-Add (or update if it already exists) the category entry in the Reference section:
+Add (or update if it already exists) the category entry in the Reference section.
+Sidebar item IDs follow the pattern \`"reference/<category-kebab>/<type-name>"\` (all lowercase, no .md extension):
+
 \`\`\`javascript
 {
   type: "category",
   label: "${category}",
   link: { type: "doc", id: "reference/${categoryKebab}/index" },
   items: [
-    ${types!.map((t) => `"reference/${categoryKebab}/${t}"`).join(',\n    ')}
+    ${normalizedTypes!.map((t) => `"reference/${categoryKebab}/${t}"`).join(',\n    ')}
   ]
 }
 \`\`\`
@@ -238,12 +256,25 @@ Based on your Phase 1 analysis, propose and apply category groupings.
 - MEDIUM (70-89%): Some signal — description or relationships align, but not both
 - LOW (<70%): Weak signal — prefer leaving uncategorized
 
+**Sidebar entry format** — sidebar item IDs follow this pattern (all lowercase, no .md extension):
+\`\`\`javascript
+{
+  type: "category",
+  label: "<Category Name>",
+  link: { type: "doc", id: "reference/<category-kebab>/index" },
+  items: [
+    "reference/<category-kebab>/<type-name>",
+    "reference/<category-kebab>/<type-name>"
+  ]
+}
+\`\`\`
+
 **Instructions:**
 1. Propose all category groupings with confidence levels
 2. ${confidenceInstruction}
 3. For each approved category:
    a. Create \`${docsDir}/reference/<category-kebab>/index.md\` with: frontmatter (id, title), Introduction (2-3 sentences), Related Types list with descriptions, Overview section
-   b. Update \`${sidebarsPath}\`: add { type: "category", label, link, items } in alphabetical order
+   b. Update \`${sidebarsPath}\`: add the category entry using the format above, in alphabetical order
 4. Report:
    - Categories created (with grouped types and confidence)
    - Proposals not applied (confidence below threshold)
@@ -252,7 +283,7 @@ Based on your Phase 1 analysis, propose and apply category groupings.
 Apply all approved changes now.`;
       }
 
-      await session.prompt(organizePrompt);
+      await session!.prompt(organizePrompt);
       console.log('[Phase 2] ✓ Organization complete');
       phasesCompleted.push('organize');
     }
@@ -282,7 +313,7 @@ If the command fails:
 
 Report: final syntax status, any fixes applied, and the remaining error if still invalid after 3 attempts.`;
 
-      await session.prompt(verifyPrompt);
+      await session!.prompt(verifyPrompt);
       console.log('[Phase 3] ✓ Verify complete');
       phasesCompleted.push('verify');
     }
@@ -327,6 +358,10 @@ Report: final syntax status, any fixes applied, and the remaining error if still
         } else {
           let currentErrors = parseBuildErrors(initialBuild.output);
           console.log(`[Phase 4] Found ${currentErrors.length} error(s), starting fix loop`);
+
+          if (!session) {
+            session = await harness.session('fix-website-build-errors');
+          }
 
           let round = 0;
           for (round = 1; round <= MAX_BUILD_FIX_ROUNDS; round++) {
