@@ -308,6 +308,48 @@ npx flue run write-tutorial --target node --input '{
 - Warm, welcoming tone
 - 38-item checklist verification in Phase 3
 
+### Write Module Reference
+
+Generate comprehensive reference documentation for a module containing multiple related data types.
+
+```bash
+npx flue run write-module-ref --target node --input '{
+  "projectRoot": "/path/to/zio",
+  "moduleName": "http-model",
+  "outputPath": "docs/reference/http-model.md"
+}'
+```
+
+**Phases:** Research → Write → Verify → Integrate → Review → Style → Build Verify
+
+| Parameter     | Required | Description                                                                                                |
+| ------------- | -------- | ---------------------------------------------------------------------------------------------------------- |
+| `projectRoot` | yes      | Absolute path to the ZIO project root                                                                      |
+| `moduleName`  | yes      | Module identifier, e.g. `http-model`, `resource-management`                                                |
+| `outputPath`  | yes      | **Flat:** `docs/reference/<module>.md` — **Hierarchical:** `docs/reference/<module>/` (trailing slash)     |
+| `structure`   | no       | `flat` or `hierarchical`; agent decides from skill rule if omitted (≤4 types → flat, ≥5 → hierarchical)    |
+| `examples`    | no       | `{ "moduleName": "...", "packageName": "...", "parentModule": "..." }` — generate companion Scala examples |
+| `diagram`     | no       | `{ "outputPath": "...", "prompt": "..." }` — generate interactive JSX diagram                              |
+
+**Flat vs hierarchical:**
+
+```bash
+# Flat — single file (≤4 core types)
+npx flue run write-module-ref --target node --input '{
+  "projectRoot": "/path/to/zio-http",
+  "moduleName": "http-model",
+  "outputPath": "docs/reference/http-model.md"
+}'
+
+# Hierarchical — index + per-type pages (≥5 core types)
+npx flue run write-module-ref --target node --input '{
+  "projectRoot": "/path/to/zio-http",
+  "moduleName": "resource-management",
+  "outputPath": "docs/reference/resource-management/",
+  "structure": "hierarchical"
+}'
+```
+
 ### Fix Writing Style
 
 Validate and fix prose style violations in a documentation file.
