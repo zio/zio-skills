@@ -33,6 +33,7 @@ writer-assistant/
 │   ├── extract-metadata.ts      # Metadata extraction workflow
 │   ├── fix-writing-style.ts     # Writing style fixing workflow (2 phases)
 │   ├── organize-types.ts        # Sidebar categorization workflow — manual or auto (4 phases)
+│   ├── report-method-coverage.ts # Method coverage checker — runs extract-members + check-coverage scripts (no agent)
 │   ├── check-mdoc.ts            # mdoc compilation checker (no agent, pure execSync, read-only)
 │   ├── fix-mdoc.ts              # mdoc compiler + fixer (writer agent fixer loop)
 │   ├── check-website.ts         # Full website build checker (no agent, read-only)
@@ -578,7 +579,85 @@ Any phase can be skipped via `skipPhases: string[]`.
 
 **Output:** Updated `sidebars.js` + new `docs/reference/<category>/index.md` file(s) per approved category.
 
-### 3.14. Fix mdoc Workflow (`workflows/fix-mdoc.ts`)
+### 3.14. Report Method Coverage Workflow (`workflows/report-method-coverage.ts`)
+
+**Purpose:** Cross-check the public members of a Scala data type against a reference documentation page and report any members that are not documented. No LLM session — purely deterministic; runs two shell scripts and returns structured JSON.
+
+**Steps:**
+
+1. _(optional)_ **Member Extraction** — when `sourceFile` is provided, runs `scala-cli` on `extract-members.scala` with `--json` to get companion / publicApi / inherited member lists; writes them to a temp file in the sectioned format expected by the coverage script; skipped when `membersFile` is provided directly
+2. **Coverage Check** — runs `bash check-method-coverage.sh --json <typeName> <docFile> <membersFile>`, parses stdout as JSON
+
+**Input:**
+
+```json
+{
+  "typeName": "Chunk",
+  "docFile": "/path/to/docs/reference/chunk.md",
+  "sourceFile": "/path/to/zio/Chunk.scala"
+}
+```
+
+```json
+{
+  "typeName": "Chunk",
+  "docFile": "/path/to/docs/reference/chunk.md",
+  "membersFile": "/tmp/chunk-members.txt"
+}
+```
+
+- Exactly one of `sourceFile` (triggers extraction) or `membersFile` (skips extraction) must be provided.
+
+**Output:**
+
+```json
+{
+  "typeName": "Chunk",
+  "docFile": "/path/to/docs/reference/chunk.md",
+  "fullCoverage": false,
+  "categories": {
+    "companion": { "total": 5, "documented": 4, "missing": ["from"] },
+    "publicApi": { "total": 12, "documented": 12, "missing": [] }
+  },
+  "memberExtraction": {
+    "success": true,
+    "sourceFile": "/path/to/zio/Chunk.scala",
+    "companion": ["apply", "empty", "from", "single", "succeed"],
+    "publicApi": [
+      "append",
+      "drop",
+      "filter",
+      "flatMap",
+      "fold",
+      "get",
+      "head",
+      "isEmpty",
+      "map",
+      "size",
+      "tail",
+      "toList"
+    ],
+    "inherited": []
+  },
+  "durationMs": 3210
+}
+```
+
+**Script paths** (resolved via `import.meta.url` at runtime):
+
+- `plugins/documentation/skills/docs-data-type-list-members/extract-members.scala`
+- `plugins/documentation/skills/docs-report-method-coverage/check-method-coverage.sh`
+
+**Exit code handling:**
+
+| Script exit code | Meaning                            | Workflow action               |
+| ---------------- | ---------------------------------- | ----------------------------- |
+| 0                | Full coverage / extraction success | Returns result                |
+| 1                | Missing members / no members found | Returns result (not an error) |
+| 2                | Invocation error                   | Throws                        |
+| null             | Process failed to start            | Throws                        |
+
+### 3.15. Fix mdoc Workflow (`workflows/fix-mdoc.ts`)
 
 **Purpose:** Compile mdoc code blocks, and if errors are found, automatically fix them using the docs-writer agent. Loops up to `maxRounds` (default 3).
 
