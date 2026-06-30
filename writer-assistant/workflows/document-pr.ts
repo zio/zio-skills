@@ -193,7 +193,8 @@ Using the PR data and your decision from Phase 2, write a comprehensive referenc
 
 Requirements:
 - Frontmatter: \`id\` (kebab-case), \`title\`, \`description\` (≤150 chars), \`keywords\` (3-7 phrases)
-- Follow the docs-data-type-ref skill for complete section structure and conventions
+- Follow the docs-data-type-ref skill structure:
+  Opening definition (no heading) → Motivation → Quick Showcase → Installation → Construction → Core Operations → optional sections
 - Document every public method/type introduced by this PR
 - All code examples MUST use mdoc syntax (\`mdoc\`, \`mdoc:reset\`, \`mdoc:compile-only\` as appropriate)
 - No blank lines between consecutive code blocks
@@ -210,7 +211,8 @@ Using the PR data and your decision from Phase 2, write a goal-oriented how-to g
 
 Requirements:
 - Frontmatter: \`id\`, \`title\` (starts with "How to…"), \`description\` (≤150 chars), \`keywords\`
-- Follow the docs-how-to-guide skill for complete section structure and conventions
+- Follow the docs-how-to-guide skill structure:
+  Goal statement → Prerequisites → Numbered steps → Complete runnable example → Next steps
 - Each step must include a concrete code example
 - All code examples MUST use mdoc syntax
 - Imperative mood, second person ("you"), numbered steps
