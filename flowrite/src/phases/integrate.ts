@@ -17,7 +17,7 @@ export const integrateOutput = v.object({
  * between doc kinds is the target category and the delegation prompt, so those
  * are supplied per call; the skip guard, delegation, and output shape are shared.
  *
- * The skip-list check lives here in code — see review-tutorial.ts (action) for
+ * The skip-list check lives here in code — see review-page.ts for
  * why it must not live only as prose in the orchestrator's .md.
  */
 export function defineIntegrateAction(opts: {

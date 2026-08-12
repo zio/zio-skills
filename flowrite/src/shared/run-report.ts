@@ -58,6 +58,17 @@ const BLOAT_MULTIPLE = 3;
 /** Tunable: one failed `edit` is a stale match, several is a loop. */
 const TOOL_ERROR_THRESHOLD = 3;
 
+/**
+ * Review rounds allowed before the repeat is worth remarking on.
+ *
+ * Review is *designed* to repeat now — it reports, the writer fixes, it confirms — so `calls > 1` is the
+ * normal case rather than a defect, and flagging it on every run would teach the reader to skip the
+ * report. Six is above what a healthy run needs: the worst measured (turn17) converged in six passes
+ * from an unusually rough draft, so seven means something is wrong even though `runChecks` also bounds
+ * the loop from the inside.
+ */
+const REVIEW_REPEAT_LIMIT = 6;
+
 const money = (n: number) => `$${n.toFixed(4)}`;
 
 function median(values: number[]): number {
@@ -80,11 +91,20 @@ export function computeFlags(input: FlagInput): RunFlag[] {
   const real = phases.filter((p) => !p.phase.startsWith('('));
 
   for (const [phase, calls] of Object.entries(activity.phaseCalls)) {
-    if (calls > 1) {
+    // Review is expected to repeat: it reports, the writer fixes, it confirms — and a repeat re-checks
+    // only what failed, so it is cheap by construction. Flagging every run's normal loop would train the
+    // reader to ignore the report, which is the one thing a report must not do. `runChecks` bounds the
+    // loop itself by refusing to keep going when repairs stop landing (see STALL_LIMIT), so the flag only
+    // has to catch a loop long enough to look pathological even when it is making progress.
+    const limit = phase.startsWith('review') ? REVIEW_REPEAT_LIMIT : 1;
+    if (calls > limit) {
       flags.push({
         code: 'phase-repeat',
         phase,
-        detail: `ran ${calls}× — repeated work, or a phase re-entered after failing`,
+        detail:
+          calls > 1 && limit > 1
+            ? `ran ${calls}× — more review rounds than a page should need, even a converging one`
+            : `ran ${calls}× — repeated work, or a phase re-entered after failing`,
       });
     }
   }

@@ -9,7 +9,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 
 import { createReportRunResultTool } from './run-result.ts';
-import { __setLastReviewForTests } from './review.ts';
+import { __setLastReviewForTests } from '../review/run.ts';
 
 const tool = createReportRunResultTool('write-data-type-ref');
 

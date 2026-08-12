@@ -5,7 +5,7 @@ import * as v from 'valibot';
  * Minimal todo task tree for harnessing a session through multi-step work
  * (create tasks up front, then work them one at a time). State is
  * module-level and per-process for the same reason as reviewCallCount in
- * review-tutorial.ts (action): this repo runs one process per tutorial. The
+ * review-page.ts: this repo runs one process per tutorial. The
  * invariants live in code, not prose: only one task in_progress at a time,
  * and a parent cannot complete while a child is open.
  */

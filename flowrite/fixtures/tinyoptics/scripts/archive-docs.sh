@@ -161,6 +161,13 @@ final_count="$(copy_tree "$dest/tinyoptics-final")"
 git reset -q -- .
 git checkout -- .
 git clean -fdq -- .
+# git ignores these (`.gitignore`: *.log), so `git clean` without -x leaves them behind — and a stale
+# mdoc-<subject>.log from an earlier run reads to the next agent as evidence that mdoc already passed
+# for that page. Deliberately not `git clean -fdx`: target/ and .flowrite/cache hold sbt and research
+# caches worth keeping, and wiping them slows every following run for no measurement benefit.
+rm -f mdoc-*.log
+# Dead state: review no longer edits pages, so there is nothing to diff a pre-review snapshot against.
+rm -rf .flowrite/pre-review
 base_count="$(copy_tree "$dest/tinyoptics-base")"
 
 changed="$(grep -c '^diff --git' "$dest/changes.patch" || true)"

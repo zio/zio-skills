@@ -12,7 +12,7 @@ export const writeCompanionExamplesOutput = v.object({
 /**
  * Build companion example files for a finished documentation page (tutorial or
  * reference), then verify they compile and run. Checks the skip list before ever
- * delegating — see review-tutorial.ts (tool) for why this check must live in
+ * delegating — see review-page.ts for why this check must live in
  * code, not only as prose in the agent instructions. Shared across document kinds.
  */
 export const writeCompanionExamples = defineTool({

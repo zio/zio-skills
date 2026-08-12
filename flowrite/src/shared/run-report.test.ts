@@ -60,6 +60,26 @@ test('a phase that ran twice is flagged', () => {
   assert.deepEqual(flags, ['phase-repeat']);
 });
 
+test('a repeating review is not flagged — that is the design', () => {
+  // Review reports, the writer fixes, review confirms. A repeat re-checks only what failed, so it is
+  // cheap by construction; flagging every run's normal loop would teach the reader to skip the report.
+  // turn17 needed six passes to converge from a rough draft and was flagged for it.
+  for (const calls of [2, 4, 6]) {
+    assert.deepEqual(
+      codes({ activity: activity({ phaseCalls: { review_data_type_ref: calls } }) }),
+      [],
+      `${calls} review passes should be unremarkable`,
+    );
+  }
+});
+
+test('a review loop past the limit is still flagged, in its own words', () => {
+  const flags = computeFlags(input({ activity: activity({ phaseCalls: { review_module_ref: 7 } }) }));
+  assert.equal(flags.length, 1);
+  assert.equal(flags[0]!.code, 'phase-repeat');
+  assert.match(flags[0]!.detail, /more review rounds than a page should need/);
+});
+
 test('a failed phase is flagged with what it spent', () => {
   const flags = computeFlags(
     input({ activity: activity({ phaseFailures: { design_data_type_structure: 2 } }) }),

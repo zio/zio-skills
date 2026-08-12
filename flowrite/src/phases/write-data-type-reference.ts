@@ -4,6 +4,7 @@ import { dataTypeResearchSchema } from './research-data-type.ts';
 import { dataTypeStructureSchema } from './design-data-type-structure.ts';
 import { isPhaseSkipped } from '../shared/skip-phases.ts';
 import { buildFrontmatter, withFrontmatter } from '../shared/frontmatter.ts';
+import { normalizePage } from '../review/fix.ts';
 // The data-type-ref-structure skill's content, injected into the generic drafter's
 // task (skills can't vary per delegation). Same single-source-of-truth
 // split as writing-style/references/rules.md; the SKILL.md points here.
@@ -145,7 +146,9 @@ export const writeDataTypeReference = defineTool({
       description: draft.description,
       keywords: draft.keywords,
     });
-    const content = withFrontmatter(frontmatter, draft.body);
+    // Deterministic style repairs, applied before anything reads the page: review is read-only, so a
+    // mechanical violation surfacing there means a later phase reintroduced it or a fix is broken.
+    const content = normalizePage(withFrontmatter(frontmatter, draft.body), log);
 
     await harness.sandbox.writeFile(path, content);
     return { output: { path, content } };

@@ -5,17 +5,17 @@ import { designTutorialStructure } from '../phases/design-tutorial-structure.ts'
 import { writeTutorialDraft } from '../phases/write-tutorial-draft.ts';
 import { writeCompanionExamples } from '../phases/write-companion-examples.ts';
 import { integrateTutorial } from '../phases/integrate.ts';
-import { reviewTutorial } from '../phases/review-tutorial.ts';
+import { reviewTutorial } from '../phases/review-page.ts';
 import { researchDataType } from '../phases/research-data-type.ts';
 import { designDataTypeStructure } from '../phases/design-data-type-structure.ts';
 import { writeDataTypeReference } from '../phases/write-data-type-reference.ts';
 import { integrateDataTypeReference } from '../phases/integrate.ts';
-import { reviewDataTypeRef } from '../phases/review-data-type-ref.ts';
+import { reviewDataTypeRef } from '../phases/review-page.ts';
 import { researchModule } from '../phases/research-module.ts';
 import { designModuleStructure } from '../phases/design-module-structure.ts';
 import { writeModuleOverview } from '../phases/write-module-overview.ts';
 import { integrateModuleReference } from '../phases/integrate-module.ts';
-import { reviewModuleRef } from '../phases/review-module-ref.ts';
+import { reviewModuleRef } from '../phases/review-page.ts';
 
 /**
  * Every agent's own phase tools — model-callable, but delegating their real work

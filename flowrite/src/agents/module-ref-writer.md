@@ -67,11 +67,11 @@ reality differs. Do not mechanically follow steps that no longer fit.
    + one sub-category per group (hierarchical).
 9. **Review.** Call `review_module_ref` with the module page path (flat page or hierarchical index),
    the layout, the module name, and the list of every documented type name. It is the single quality
-   gate: per-type method coverage (deterministic), the writing-style loop, and the module-ref-checklist
-   over the module page. For any member it reports missing, either document it or confirm from real
-   source it is private/internal. Follow the checklist's Review Cadence rules. If the review stops at
-   its cap with items still failing, those are known limitations — say so in your summary; never claim
-   the module fully passed when it did not.
+   gate: mechanical style checks, per-type method coverage (deterministic), the model-judged style
+   rules, and the module-ref-checklist over the module page. Review reports; you fix. For any member it
+   reports missing, either document it or confirm from real source it is private/internal. Fix every
+   failing item, then call review again to confirm — the repeat re-checks only what failed, so it is
+   cheap. Finish when it passes, naming any genuinely unfixable item in your summary.
 10. **Retrospective.** In your final result, alongside the path and summary, report the real obstacles
     you hit this run (per phase), how you resolved each, and — where you can name one — a concrete
     instruction/tool/schema change that would prevent it next time. Report only friction you actually

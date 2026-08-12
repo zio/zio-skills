@@ -6,7 +6,14 @@ import { observe } from '@flue/runtime';
  * role delegations are opaque in `flue run` output. Opt into full detail with
  * FLUE_VERBOSE_TOOLS=1.
  *
- * No-op unless FLUE_VERBOSE_TOOLS=1.
+ * `log` events are the exception and print ALWAYS, verbose or not. `log.info(...)` does not write
+ * anywhere by itself — it "emits a `log` event into the event stream" (reference/events.md:530), and
+ * printing one needs an observer, which nothing here provided. So every phase's progress logging has
+ * been invisible for this project's entire history: the review verdict, which checks a repeat narrowed
+ * onto, what the write phase auto-fixed, and the warning that a delegated payload did not arrive. It is
+ * also why the investigate-flowrite-log skill's advice to grep for `info ` lines never matched anything.
+ * They are small, they are the application's own diagnostics, and a run that records no verdict cannot
+ * be audited — so they are not gated behind a flag.
  *
  * Delegation is its own event pair in Flue 2 (`task_start`/`task`, carrying the
  * delegate in `event.agent`), so this no longer infers it from a tool named
@@ -25,12 +32,11 @@ import { observe } from '@flue/runtime';
  * guard keeps it to one subscriber per process.
  */
 export function installVerboseObserver(): void {
-  if (process.env.FLUE_VERBOSE_TOOLS !== '1') return;
-
   const g = globalThis as { __flueVerboseInstalled?: boolean };
   if (g.__flueVerboseInstalled) return;
   g.__flueVerboseInstalled = true;
 
+  const verbose = process.env.FLUE_VERBOSE_TOOLS === '1';
   const startedAt = new Map<string, number>();
   const seen = new Set<string>(); // `${type}:${id}` already logged this run
 
@@ -44,13 +50,27 @@ export function installVerboseObserver(): void {
   };
 
   observe((event) => {
-    switch (event.type) {
-      case 'agent_end': {
-        // Only the outermost agent's end clears the run; a delegate's end does not.
-        if (!event.taskId) seen.clear();
-        return;
-      }
+    // Always, regardless of FLUE_VERBOSE_TOOLS — see the note above.
+    if (event.type === 'log') {
+      // A `log` event carries no id, so it cannot be deduped like the others. Tool logs are stamped
+      // with `toolCallId`, which separates two calls that log the same sentence; the cost is that a
+      // single call logging one message twice prints once. Nothing in this repo does that, and a
+      // readable log is worth the trade.
+      const from = (event.attributes?.toolCallId ?? event.attributes?.hook ?? '') as string;
+      if (duplicate('log', `${event.level}|${from}|${event.message}`)) return;
+      console.error(`[${event.level}] ${event.message}`);
+      return;
+    }
+    // Before the verbose gate: the dedupe set fills up in every mode, so it has to be cleared in
+    // every mode too.
+    if (event.type === 'agent_end') {
+      // Only the outermost agent's end clears the run; a delegate's end does not.
+      if (!event.taskId) seen.clear();
+      return;
+    }
+    if (!verbose) return;
 
+    switch (event.type) {
       case 'task_start': {
         if (duplicate(event.type, event.taskId)) return;
         startedAt.set(event.taskId, Date.now());

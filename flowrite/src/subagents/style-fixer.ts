@@ -5,7 +5,11 @@ import instructions from './style-fixer.md';
 /**
  * Narrow, single-purpose role for the fixing pass in the style loop. Invoked
  * once per rule group with that group's violations; it reads the page once and
- * applies every fix in a single pass (see style-loop.ts and style-fixer.md).
+ * applies every fix in a single pass (see style-fixer.md).
+ *
+ * Currently declared with no caller, like review_resolver. The style loop that invoked it was replaced
+ * by the read-only check registry in src/review/ — the writer fixes what review reports. Kept declared
+ * so restoring an automatic style fixer stays a one-line change rather than a re-implementation.
  */
 export function StyleFixer() {
   return instructions;

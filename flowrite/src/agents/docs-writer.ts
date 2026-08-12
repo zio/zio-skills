@@ -39,9 +39,7 @@ import { writeTutorialDraft } from '../phases/write-tutorial-draft.ts';
 import { writeCompanionExamples } from '../phases/write-companion-examples.ts';
 import { integrateDataTypeReference, integrateTutorial } from '../phases/integrate.ts';
 import { integrateModuleReference } from '../phases/integrate-module.ts';
-import { reviewDataTypeRef } from '../phases/review-data-type-ref.ts';
-import { reviewModuleRef } from '../phases/review-module-ref.ts';
-import { reviewTutorial } from '../phases/review-tutorial.ts';
+import { reviewDataTypeRef, reviewModuleRef, reviewTutorial } from '../phases/review-page.ts';
 
 // Ordinary tools, mounted unguarded. Deterministic and free, so the writer can iterate against them
 // instead of waiting for the review phase to discover a gap.

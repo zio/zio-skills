@@ -2,7 +2,7 @@ import { useAgentFinish } from '@flue/runtime';
 import { trackTokenUsage, type TokenUsageTracker } from './token-usage.ts';
 import { trackComponentUsage, type ComponentUsageTracker } from './component-usage.ts';
 import { guardRefusals } from './phase-guard.ts';
-import { failingReviewItems, getLastReview } from './review.ts';
+import { failingReviewItems, getLastReview } from '../review/run.ts';
 import { buildRunReport } from './run-report.ts';
 
 /**

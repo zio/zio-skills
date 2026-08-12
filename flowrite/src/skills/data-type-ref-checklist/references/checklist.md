@@ -38,8 +38,6 @@ Verify every item. The reference page is not done until all pass.
 
 ## Review Cadence
 
-- Fix EVERY failing item in a single editing pass — do not call this checklist again until all are addressed.
-- Only re-review to confirm the fixes, not to discover the next issue one at a time.
-- The review action enforces a hard call cap. When it reports the cap is reached, note remaining issues
-  as known limitations and finish anyway — never keep calling it. If those remaining items are still
-  failing, say so in the final summary; do not claim the page fully passed when it did not.
+- Fix every failing item in one editing pass, then call review again to confirm.
+- The repeat re-checks only what failed, so confirming is cheap — do it.
+- Finish when the review passes. Name any genuinely unfixable item in the final summary.

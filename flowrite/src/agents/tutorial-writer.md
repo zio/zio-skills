@@ -43,11 +43,11 @@ differs. Do not mechanically follow steps that no longer fit.
    pair for any other docs file you touched, never all docs. Fix every `[error]` before
    continuing. Mandatory before you call the tutorial done.
 7. **Integrate.** Call `integrate_tutorial` with the tutorial path.
-8. **Review.** Call `review_tutorial`. It first checks and fixes every
-   writing-style rule group by group itself; then evaluates the checklist. Load
-   the `tutorial-checklist` skill and follow its Review Cadence rules. If the review
-   stops at its cap with items still failing, those are known limitations — say so
-   in your summary; never claim the tutorial fully passed when it did not.
+8. **Review.** Call `review_tutorial`. It runs the mechanical style checks, the
+   model-judged style rules, and the checklist in one pass. Review reports; you fix.
+   Load the `tutorial-checklist` skill, fix every failing item, then call review again
+   to confirm — the repeat re-checks only what failed, so it is cheap. Finish when it
+   passes, naming any genuinely unfixable item in your summary.
 9. **Retrospective.** In your final result, alongside the path and summary,
    report the real obstacles you hit this run (per phase), how you resolved
    each, and — where you can name one — a concrete instruction/tool/schema
