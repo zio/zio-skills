@@ -126,6 +126,12 @@ Between consecutive code blocks, add bridging prose that explains what the next 
    - ❌ `def map[B](f: A => B): ZIO[R, E, B] = ???`
    - ✅ `trait ZIO[-R, +E, +A] { def map[B](f: A => B): ZIO[R, E, B] = ??? }`
 
+   Drop a trailing `(implicit trace: Trace)` from these illustrative signatures — it's plumbing, not part of what the method teaches:
+   - ❌ `def recurs(n: Long)(implicit trace: Trace): Schedule.WithState[Long, Any, Any, Long]`
+   - ✅ `def recurs(n: Long): Schedule.WithState[Long, Any, Any, Long]`
+
+   Drop empty parens too if that was the only parameter list (`def once: X`, not `def once(): X`). This applies only to illustrative signature-listing blocks — a real `mdoc:compile-only` example still needs the implicit in scope to compile.
+
 20. **Write contextualized descriptions for code blocks**: When showing example code snippets, explain what they do and why they are relevant. Provide context before every code block with a sentence that introduces it, explains its purpose, and ends with a colon (`:`). The introduction must be contextualized — relate it to what the code demonstrates or why it matters in context (avoid generic phrases like "here's an example" or "we can see this in action").
    
    **Bad vs. Good:**
