@@ -1,362 +1,88 @@
 ---
 name: docs-document-pr
 description: >
-  Generates documentation from a GitHub pull request. Automatically gathers
-  related issues, commits, and PR metadata, then creates a new reference page,
-  how-to guide, or appends a subsection to an existing page based on the PR's
-  content type and scope. Delegates to specialized documentation skills
-  (docs-data-type-ref, docs-how-to-guide) to ensure consistent style and
-  formatting across all ZIO project docs.
-argument-hint: "[PR number (e.g., #1016 or 1016)]"
-allowed-tools: Read, Glob, Grep, Bash(gh:*)
-triggers:
-  - "document PR"
-  - "doc this PR"
-  - "write docs for PR"
-  - "generate documentation from"
-  - "create docs from"
-  - "document this pull request"
+  Decide, from a bare PR number, whether it needs a full new page, a subsection
+  on an existing page, or nothing at all — then name the right skill for the
+  job, writing nothing itself. Use when the user asks to document a PR and it is
+  not already clear whether that means a new page or an addition to one that
+  exists.
+argument-hint: "<PR number>"
+allowed-tools: Read, Glob, Grep, Bash(gh:*), Bash(node:*)
 ---
 
-# Skill: docs-document-pr
+You decide, from a bare PR number, whether "document this PR" means a full new page, a subsection on an existing page, or nothing at all, then name the skill that does it. You write no subsection and touch no sidebar yourself; that happens only once the right skill takes over.
 
-## Description
+This is the front door for "document PR #<n>" when the requester does not already know which of the two applies. Use it before invoking `docs-data-type-ref`, `docs-module-ref`, `docs-tutorial`, `docs-how-to-guide`, or `docs-pr-subsection` directly, so the requester never has to guess which one first.
 
-Generates documentation from a GitHub pull request. Automatically gathers related issues, commits, and PR metadata, then writes a new docs page or appends a subsection to an existing page based on the content type.
+`gh` infers the repo from the checkout — never pass `--repo`, and `gh api repos/{owner}/{repo}/...`
+resolves those placeholders itself from the current directory.
 
-**Trigger:** User says something like "document PR #123", "write docs for PR 456", "generate documentation from this PR", or "doc this PR".
+## What you do
 
----
+1. **Fetch the PR and its linked issues.**
 
-## Phase 1: Collect PR Data
-
-### Step 1a — Get PR metadata and commits
-
-Use the `gh` CLI to fetch the PR number (the user provides this). `gh` infers the repo from the
-checkout — never pass `--repo`:
-
-```bash
-gh pr view <PR_NUMBER> \
-  --json title,body,labels,commits,closingIssuesReferences
-```
-
-**What to extract:**
-- **PR title**: The main feature/fix name
-- **PR body**: Context, motivation, and any additional notes
-- **Labels**: Look for `feat`, `enhancement`, `new-module`, `schema-*`, `fix`, etc.
-- **Commits**: List of commit messages (useful for "What changed" section)
-- **Closing issues**: Issue references the PR closes/fixes/resolves
-
-### Step 1b — Fetch linked issue details
-
-For each issue referenced in the PR (via `closingIssuesReferences` or found via regex scan of PR body):
-
-```bash
-gh issue view <ISSUE_NUMBER> \
-  --json title,body,labels
-```
-
-**What to extract:**
-- Issue title and body (motivation, requirements, discussion)
-- Issue labels (helps understand priority, feature area)
-
-### Step 1c — Optional: Regex scan PR body
-
-If the PR body mentions issues via keywords like:
-- `[Cc]loses?|[Ff]ixes?|[Rr]esolves?|[Rr]elates? to|see #`
-
-Extract issue numbers and fetch them. This catches manually-added issue references.
-
----
-
-## Phase 2: Decide — New Page or Subsection?
-
-**Create a NEW PAGE** if:
-- The PR introduces a **new module, data type, or substantial feature** (e.g., "Add XML support", "Add new codec type")
-- **No existing doc page** closely covers the topic
-- Labels include `new-module`, `feat` (not `enhancement`), or the PR title suggests something brand-new
-- The PR is **significant enough** to warrant its own documentation space
-
-**Add a SUBSECTION** if:
-- The PR is an **enhancement or bug fix** to an existing feature
-- An existing page in `docs/reference/` or `docs/guides/` already covers the parent topic
-- Labels include `enhancement`, `fix`, or the PR touches an already-documented area
-- You can logically fit the new content under an existing section
-
-### Heuristics
-
-1. **Match PR title against existing doc filenames:**
-   - Scan `docs/reference/` and `docs/guides/` for `.md` files
-   - Extract the `id` field from each file's frontmatter
-   - If the PR topic matches an existing `id`, plan for a subsection
-
-2. **Check PR labels:**
-   - `schema-*` labels → likely fits under `docs/reference/schema.md` (if it exists)
-   - `feat` + new name → likely a new page
-   - `enhancement` + existing area → likely a subsection
-   - `fix` → usually a subsection (documents the fix under an existing feature)
-
-3. **Example decisions:**
-   - PR: "Add XML support" → New page: `docs/reference/schema-xml.md`
-   - PR: "Fix schema derivation" → Subsection in: `docs/reference/schema.md` → add under "Schema derivation"
-   - PR: "Add new module: Temporal" → New page: `docs/reference/temporal.md`
-
----
-
-## Phase 3: Write Documentation
-
-### Decision: Delegate to Specialized Skills
-
-**Do NOT write documentation directly.** Instead, determine the doc type and use the appropriate ZIO project documentation skill:
-
-#### Path 3a — NEW REFERENCE PAGE (API / Data Type)
-
-**When:** PR introduces a new data type, module, codec, or technical feature
-- Labels: `feat`, `new-module`, `schema-*`
-- No existing parent doc to extend
-
-**Invoke:** Use the **`docs-data-type-ref`** skill
-
-```
-User: "Create a reference page for this new Schema type from PR #1234"
-```
-
-**The skill will:**
-- Gather the feature info from the PR (title, body, linked issues)
-- Write a structured reference page with Overview, Usage, Examples, API Reference
-- Follow ZIO project documentation conventions (style, code blocks, frontmatter)
-- Return the file path
-
-#### Path 3b — NEW HOW-TO GUIDE
-
-**When:** PR introduces a workflow, pattern, or tutorial-style feature
-- Labels: `guide`, `enhancement`, `tutorial`
-- Teaches "how to accomplish X" with the new feature
-
-**Invoke:** Use the **`docs-how-to-guide`** skill
-
-```
-User: "Create a how-to guide for the new temporal processing feature from PR #1234"
-```
-
-**The skill will:**
-- Extract motivation and use-cases from PR and linked issues
-- Write a step-by-step guide with concrete examples
-- Follow ZIO project style and code block conventions
-- Return the file path
-
-#### Path 3c — ADD SUBSECTION to existing page
-
-**When:** PR enhances an existing feature or fixes a documented area
-- Labels: `enhancement`, `fix`
-- Existing doc page covers the parent topic
-
-**First, check whether this is genuinely a freeform "what changed" note, or one of two more specific
-cases** — the three are not interchangeable, and picking the wrong one has produced real drift here
-before:
-- The PR completed a section that was **entirely absent** from the page and matches one of the five
-  canonical reference-page section types (Construction, Predefined Instances, Comparison, Advanced
-  Usage, Motivation) → delegate to **`docs-add-missing-section`** instead of the manual process below.
-- The PR extends an **existing but thin** section (signature + toy example, no real motivation) →
-  delegate to **`docs-enrich-section`** instead.
-- The PR corrects something the page **already claims incorrectly** (a bugfix whose old, wrong
-  behavior the page documented) → this is a targeted **edit** of the existing wrong text, not a new
-  subsection at all. Read the passage, correct it to match the fixed behavior, and stop — don't
-  invent a "Behaviour notes" subsection to hold a correction that belongs inline.
-- Otherwise — the common case, a small enhancement with nothing thin or wrong to fix, just something
-  new to note — use the manual process below.
-
-**Manual process** (the common case):
-1. Read the existing page at `docs/reference/<id>.md` or `docs/guides/<id>.md`
-2. Extract PR context (issues, motivation, commits)
-3. Append a new section using this structure:
-   ```markdown
-   ## <Feature Name or "New Feature: Name">
-
-   <Context from linked issues — what problem does this solve?>
-
-   ### Changes in this PR
-
-   - <Bullet 1: What changed>
-   - <Bullet 2: What changed>
-
-   ### Example
-
-   A prose sentence ending in `:`, then:
-
-   \`\`\`scala mdoc:compile-only
-   <brief code example showing the new feature>
-   \`\`\`
-
-   ### API Reference
-
-   <If applicable, list new types/methods. Link to reference docs if they exist.>
-   ```
-4. Follow `docs-writing-style` for prose (refer to the skill for rules)
-5. Follow `docs-mdoc-conventions` for code block syntax (refer to the skill for modifiers and admonitions) — the example above is illustrative; a real block always carries a real mdoc modifier, never plain ` ```scala ` for a runnable example
-6. **Verify it compiles** — this page was not touched by any other verification step, so this is the only place it happens:
    ```bash
-   sbt "docs/mdoc --in docs/reference/<id>.md --out website/docs/reference/<id>.md"
-   ```
-   (or `docs/guides/<id>.md`, matching wherever the page actually lives). Zero `[error]` lines before continuing.
-
-### Guidelines Across All Paths
-
-1. **Source content from the PR:**
-   - PR title → doc title
-   - PR body + linked issue bodies → motivation, use-cases, context
-   - Commit messages → what changed (summarize key commits)
-   - Labels → doc type and categorization
-
-2. **Integrate with existing skills:**
-   - Consult **`docs-writing-style`** for prose rules and tone
-   - Consult **`docs-mdoc-conventions`** for code block modifiers (`:mdoc` markers) and Docusaurus admonitions (:::note, :::warning)
-   - These skills provide shared guidelines used across all ZIO project docs
-
-3. **File naming and frontmatter:**
-   - Use kebab-case for file names and `id` fields
-   - Always include frontmatter: `id`, `title`, optional `sidebar_label`
-   - Example:
-     ```markdown
-     ---
-     id: schema-xml
-     title: "XML Schema Support"
-     sidebar_label: "XML"
-     ---
-     ```
-
----
-
-## Phase 4: Integrate with Docs Site
-
-### For new reference or how-to pages:
-
-After the `docs-data-type-ref` or `docs-how-to-guide` skill returns the file path, use **`docs-integrate`** to finalize:
-
-```
-User: "Integrate the new schema-xml docs page"
-```
-
-**The skill will:**
-- Check that frontmatter (id, title) is correct
-- Verify the page exists at the correct path
-- Update `docs/sidebars.js` in the appropriate category
-- Confirm the sidebar entry is in alphabetical or logical position
-- Provide verification steps
-
-**Manual backup:** If you need to update the sidebar yourself:
-
-1. Open `docs/sidebars.js`
-2. Find the appropriate category (e.g., "Reference", "Guides")
-3. Insert the `id` in correct alphabetical or logical position
-4. Example:
-   ```javascript
-   {
-     type: 'category',
-     label: 'Reference',
-     items: [
-       'schema',
-       'schema-xml',       // <- inserted here (alphabetically)
-       'codec',
-       // ...
-     ],
-   }
+   gh pr view <N> --json title,body,labels,commits,closingIssuesReferences
    ```
 
-### For subsection additions:
+   For every issue in `closingIssuesReferences`, and any additional issue number the body mentions via
+   "closes/fixes/resolves/relates to/see #" that the JSON field missed:
 
-No sidebar changes needed—the subsection is part of an existing page that's already in the sidebar.
+   ```bash
+   gh issue view <N> --json title,body,labels
+   ```
 
----
+   The title and body give you the topic and motivation; the commit list gives you what actually
+   changed; the labels feed the next two steps.
 
-## Phase 5: Report to User
+2. **Rule out "no docs needed" first.** Fetch the changed files:
 
-Once documentation is written, tell the user:
+   ```bash
+   gh api repos/{owner}/{repo}/pulls/{N}/files --paginate \
+     --jq '[.[] | {path: .filename, status: .status}]'
+   ```
 
-1. **Data gathered:**
-   - PR title: `<title>`
-   - Linked issues: `#123, #456, ...` or "None found"
-   - Commits included: `<count>` commits
-   - Key labels: `<labels>`
+   Build `{"title": ..., "labels": [...], "files": [...]}` from the title, label names, and that
+   files array, and run:
 
-2. **Decision made:**
-   - "Created new page: `docs/reference/schema-xml.md`"
-   - *or* "Added subsection to: `docs/reference/schema.md`"
+   ```bash
+   echo '<the json>' | node ${CLAUDE_PLUGIN_ROOT}/skills/docs-document-pr/classify-pr-docs.mjs
+   ```
 
-3. **File(s) written:**
-   - Path(s) to the created or modified file(s)
-   - Sidebar changes (if any)
+   When it returns `requiresDocs: "no"`, report its `reason` and stop — you write nothing. Trust it:
+   the gate table is fixed and this script applies it exactly, the same reasoning
+   `docs-list-undocumented-prs` gives for not re-deriving the table by hand.
 
-4. **Next steps (optional):**
-   - "You can now review the generated docs and make refinements."
-   - "Consider adding code examples if the PR includes complex changes."
+   When it returns `"uncertain"`, don't guess from the tool alone — carry on to the next step and decide
+   from the PR content itself, or surface the ambiguity if you genuinely can't tell.
 
----
+3. **Decide new page vs. subsection.** Scan `docs/reference/` and `docs/guides/` for existing pages
+   whose frontmatter `id` matches the PR's topic — a `schema-*` label or title points at
+   `docs/reference/schema.md` if that `id` exists, "Fix schema derivation" points at whichever page's
+   `id` is `schema`, and so on.
 
-## Phase 6: Verify Lint (If Examples Created)
+   - **An existing page already covers the PR's area** (an enhancement or fix to something documented;
+     labels read `enhancement`/`fix` rather than `feat`/`new-module`) → **subsection case**.
+   - **Nothing existing covers it** (a new module, type, or substantial feature with no page to extend)
+     → **new-page case**.
+   - **Genuinely unclear which** (the PR could plausibly extend an existing page or justify its own) →
+     stop and ask the requester, naming both options and why each fits. Don't default to either —
+     defaulting here just moves a wrong guess one agent downstream instead of catching it now.
 
-If documentation involved creating or modifying `.scala` example files in an examples module (see
-`docs-examples` — the module name is whatever this project's own examples setup uses, not a fixed
-name), stage them in git first, then verify that all Scala code passes the CI formatting gate before
-reporting completion:
+4. **Act on the decision:**
+   - New-page case → tell the requester which page-kind skill fits — `docs-data-type-ref` (one
+     data type), `docs-module-ref` (a module of related types), `docs-tutorial` (learning-oriented),
+     or `docs-how-to-guide` (task-oriented) — and stop.
+   - Subsection case → tell the requester to use the `docs-pr-subsection` skill, and stop.
 
-```bash
-git add <examples-module>/src/main/scala/**/*.scala
-sbt fmtChanged
-```
+## What you are not
 
-If any files were reformatted, commit the changes:
+You are not `docs-data-type-ref`, `docs-module-ref`, `docs-tutorial`, `docs-how-to-guide`, or
+`docs-pr-subsection` — you make the call among them and stop there. Writing any part of a page yourself
+is out of scope.
 
-```bash
-git add -A
-git commit -m "docs(<topic>): apply scalafmt to examples"
-```
+## Reporting
 
-Then verify the CI lint gate locally:
-
-```bash
-sbt check
-```
-
-**Success criterion:** zero formatting violations reported.
-
-**If no `.scala` files were created or modified**, skip this phase.
-
----
-
-## Implementation Checklist
-
-When you invoke this skill:
-
-- [ ] **Phase 1:** Use `gh pr view` to fetch PR metadata and commits
-- [ ] **Phase 1:** Use `gh issue view` for each linked issue (max ~5 issues per PR is typical)
-- [ ] **Phase 2:** Check existing docs in `docs/reference/` and `docs/guides/` to decide new page vs. subsection
-- [ ] **Phase 2:** Use PR labels and title as tiebreakers
-- [ ] **Phase 3a:** If new reference/API page → invoke `docs-data-type-ref` skill with PR context
-- [ ] **Phase 3b:** If new how-to guide → invoke `docs-how-to-guide` skill with PR context
-- [ ] **Phase 3c:** If subsection → check first whether it's a missing canonical section (delegate to `docs-add-missing-section`), a thin existing section (delegate to `docs-enrich-section`), or a correction to already-wrong text (a direct edit) — only the remaining common case is the manual freeform append, consulting `docs-writing-style` and `docs-mdoc-conventions`
-- [ ] **Phase 3c:** If the manual append was used, verify it compiles (`sbt "docs/mdoc --in <path> --out website/<path>"`) — nothing else checks this page
-- [ ] **Phase 4:** If new page → invoke `docs-integrate` skill to update sidebar
-- [ ] **Phase 5:** Report findings and file paths to user
-- [ ] **Phase 6:** If `.scala` examples were created, run `sbt fmt` and `sbt check` to verify lint compliance
-
----
-
-## Example Invocations
-
-For worked examples covering the common PR shapes (new reference page, new how-to guide, subsection addition, behaviour-change bugfix, and ambiguous PRs), load **[`references/example-invocations.md`](references/example-invocations.md)**. Use it when you've identified the PR's shape in Phase 2 and want to confirm the workflow, or when a PR doesn't fit one of the obvious patterns.
-
----
-
-## Notes
-
-- **Repo:** `gh` infers it from the checkout on its own — never pass `--repo` or shell out to `git remote -v` to find it
-- **PR numbers:** Assume user provides `#123` format; extract the number
-- **No commits/issues:** If a PR has no linked issues, use only PR title and body
-- **Ambiguous cases:** If unsure whether to create a new page or subsection, default to a new page (easier to reorganize later) or ask the user
-
----
-
-## Final Verification
-
-Before reporting back to the user, walk through every item in the sibling **[`CHECKLIST.md`](CHECKLIST.md)**. It covers PR analysis, doc-type routing, per-doc quality (delegated), integration, and reporting.
+PR title, linked issues found, which of the three outcomes applied (no docs needed / new page /
+subsection) and why, and — for the two writing outcomes — which skill you're handing off to. If you
+stopped to ask instead, say what made the PR ambiguous.
