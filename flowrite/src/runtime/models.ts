@@ -27,7 +27,6 @@ export const TIERS: Record<
   | 'docsOrganizer'
   | 'sectionWriter'
   | 'complianceChecker'
-  | 'prSubsectionWriter'
   | 'sectionEnricher'
   | 'gapFinder'
   | 'prAuditor'
@@ -140,16 +139,7 @@ export const TIERS: Record<
     model: process.env.COMPLIANCE_CHECKER_MODEL ?? 'anthropic/claude-sonnet-4-6',
     thinkingLevel: effort(process.env.COMPLIANCE_CHECKER_EFFORT, 'low'),
   },
-  // sectionWriter's tier and reasoning apply unchanged: this composes new prose and a runnable example
-  // from source it reads itself (here, a PR and its linked issues rather than the library source
-  // directly), same writer-in-miniature shape. `medium`, not `high`: one subsection is more bounded
-  // than one of the five canonical section types above it, since there is no insertion-point
-  // algorithm to reason about — the PR names the feature, the page's end is the seam.
-  prSubsectionWriter: {
-    model: process.env.PR_SUBSECTION_WRITER_MODEL ?? 'anthropic/claude-sonnet-4-6',
-    thinkingLevel: effort(process.env.PR_SUBSECTION_WRITER_EFFORT, 'medium'),
-  },
-  // Writer-shaped like sectionWriter and prSubsectionWriter above, but the risk sits closer to
+  // Writer-shaped like sectionWriter above, but the risk sits closer to
   // redundancyEditor's: this REPLACES content on a page that already passed review, rather than
   // inserting into empty space. A bad enrichment does not just miss an opportunity, it overwrites
   // something that worked. Sonnet stays for that reason; `medium` because composing five real parts

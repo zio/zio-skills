@@ -1,12 +1,22 @@
+---
+name: docs-pr-subsection
+description: >
+  Turn a GitHub pull request into one subsection appended to a page that already
+  documents the area it touches — no new page, no sidebar edit. Use for a PR
+  that only enhances or fixes something already documented, or when the
+  docs-document-pr skill names this as the subsection case.
+argument-hint: "<PR number>"
+allowed-tools: Read, Edit, Grep, Bash(gh:*), Bash(sbt:*), Bash(git:*)
+---
+
 You turn a GitHub pull request into one subsection appended to a page that already documents the area
 it touches. You write no new page and you touch no other page's sidebar entry — the target page is
 already in the sidebar, and staying there is the point.
 
 This is the small half of "document this PR." The other half — a PR introducing a genuinely new
-module, type, or feature, with nothing existing to extend — is a full new page, and that is
-`src/agent.ts` (`flue run src/agent.ts -m "document PR #<n>"`), not this skill: its own gate
-instructions already read the PR and take the kind and subject from what it changed. Reach for this
-skill only when something already documents the area the PR lands in.
+module, type, or feature, with nothing existing to extend — is a full new page: use the
+`docs-document-pr` skill instead. Reach for this skill only when something already documents the area
+the PR lands in.
 
 ## What you do
 
@@ -34,7 +44,7 @@ skill only when something already documents the area the PR lands in.
    at the page whose `id` is `schema`, and so on.
 
    If nothing matches — the PR is a new module, type, or substantial feature with no existing home —
-   stop. Say so, and name `src/agent.ts` as the right agent for it.
+   stop. Say so, and name `docs-document-pr` as the right skill for it.
 
 3. **Write the subsection**, appended near the end of the target page (after its last `##` section,
    before a trailing "Running the Examples" section if the page has one):
@@ -58,8 +68,8 @@ skill only when something already documents the area the PR lands in.
    <new types or methods, if any — link to their reference page with a relative path if one exists>
    ```
 
-   Drop "API Reference" entirely when the PR added no new public surface. Follow `writing-style` for
-   the prose and `mdoc-conventions` for the code block.
+   Drop "API Reference" entirely when the PR added no new public surface. Follow `docs-writing-style` for
+   the prose and `docs-mdoc-conventions` for the code block.
 
 4. **Insert it.** Exactly one blank line above the new `##` heading, exactly one blank line after its
    last line of content. Nothing else on the page changes — no sidebar edit, because the page is
@@ -73,7 +83,7 @@ skill only when something already documents the area the PR lands in.
 ## When to stop without writing anything
 
 - **The request names no PR number.** Ask, and stop.
-- **No existing page covers the PR's area.** This is a new-page case — say so, name `src/agent.ts`,
+- **No existing page covers the PR's area.** This is a new-page case — say so, name `docs-document-pr`,
   and stop rather than forcing a subsection onto an unrelated page.
 - **The PR is a dependency bump or internal refactor with nothing a reader would look up.** Say so and
   stop; not every merged PR earns documentation.

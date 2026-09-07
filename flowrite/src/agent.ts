@@ -1,5 +1,12 @@
 'use agent';
-import { type ToolDefinition, useDelivery, usePersistentState, useTool } from '@flue/runtime';
+import {
+  type ToolDefinition,
+  defineSkill,
+  useDelivery,
+  usePersistentState,
+  useSkill,
+  useTool,
+} from '@flue/runtime';
 import * as v from 'valibot';
 
 // instructions — one per kind. These files are the real per-kind content and are unchanged by the
@@ -8,6 +15,10 @@ import dataTypeRefMd from './instructions/data-type-ref.md';
 import moduleRefMd from './instructions/module-ref.md';
 import tutorialMd from './instructions/tutorial.md';
 import howToGuideMd from './instructions/how-to-guide.md';
+// Gate-phase-only skills, activated by the model rather than always in the prompt (see the
+// `documentPrSkill`/`prSubsectionSkill` doc-comment below for why these two and not a third file).
+import documentPrMd from './instructions/document-pr.md';
+import prSubsectionMd from './instructions/pr-subsection.md';
 
 import {
   type RunFacts,
@@ -54,6 +65,9 @@ import markdownTable from './skills/markdown-table/SKILL.md';
 // Ordinary tools, mounted unguarded. Deterministic and free, so the writer can iterate against them
 // instead of waiting for the review phase to discover a gap.
 import { checkMethodCoverage } from './tools/check-method-coverage.ts';
+// The deterministic "does this PR need docs at all" gate `documentPrSkill` calls into — same tool
+// `list-undocumented-prs.ts` uses, reused rather than re-derived.
+import { classifyPrDocs } from './tools/classify-pr-docs.ts';
 
 // FLUE_VERBOSE_TOOLS=1 opts into full tool/delegation/turn detail. Installed once, here, because
 // this module is now the single entry point for every kind of document.
@@ -174,6 +188,35 @@ export const KINDS = {
 const initialData = v.optional(v.object({ ...docsWriterFields }), {});
 
 /**
+ * Mounted only during the gate render (kind unknown), activated by the model rather than always in
+ * the prompt — the same `activate_skill` mechanism Claude Code's skills use, per flue's own "Skills"
+ * guide. Two, not three: the new-page case needs no skill of its own, because GATE_INSTRUCTIONS below
+ * already tells the model to read a PR directly and call `set_document_kind` — the same tool this
+ * render already has. `document-pr` earns its place for the part GATE_INSTRUCTIONS does NOT do
+ * deterministically (ruling out "no docs needed" via `classify_pr_docs` before falling back to
+ * judgment) and for naming the subsection case; `pr-subsection` earns its place because, once
+ * activated, this same conversation can just carry it out — fetch, decide, write, verify, commit —
+ * with no separate `flue run` needed, unlike when these lived in their own now-deleted agent files.
+ */
+const documentPrSkill = defineSkill({
+  name: 'document-pr',
+  description:
+    'Decide, from a bare PR number, whether it needs a full new page, a subsection on an existing ' +
+    'page, or nothing at all. Use when asked to "document PR #<n>" and it is not already clear which ' +
+    'case applies.',
+  instructions: documentPrMd,
+});
+
+const prSubsectionSkill = defineSkill({
+  name: 'pr-subsection',
+  description:
+    'Turn a GitHub pull request into one subsection appended to a page that already documents the ' +
+    'area it touches — no new page, no sidebar edit. Use for a PR that only enhances or fixes ' +
+    'something already documented, or when the document-pr skill names this as the subsection case.',
+  instructions: prSubsectionMd,
+});
+
+/**
  * The gate render's instructions: before the kind is known, the only thing to do is establish it.
  *
  * Ambiguity must stop the run rather than resolve it. "Write docs for Chunk" genuinely fits both a
@@ -208,7 +251,8 @@ export const GATE_INSTRUCTIONS = [
   '   ✅ "document PR #42" → read it, then `data-type` + `ZStream`  ❌ subject `PR #42`  ❌ a ' +
     'dependency bump or internal refactor → no page; say so and stop.',
   '   ❌ a PR that only enhances or fixes something an existing page already covers → not a new ' +
-    'page either; that is `src/pr-subsection.ts`, a different flowrite agent — say so and stop.',
+    'page either; flowrite has no agent for that — say so, point at the `docs-pr-subsection` skill ' +
+    '(or `src/instructions/pr-subsection.md` applied by hand), and stop.',
   '',
   'Record both with `set_document_kind`. The phase tools for that kind appear immediately after.',
   '',
@@ -242,6 +286,15 @@ export function DocsWriter() {
   const facts = useRunBasics(initialData, request, kind);
 
   if (kind === null || subject === null) {
+    // PR-shaped requests: the two skills above, activated by the model rather than always in the
+    // prompt, plus what `pr-subsection` needs to actually carry out a write here — `mdoc-conventions`
+    // (writing-style is already mounted for every render, inside `useRunBasics`) and the
+    // `classify_pr_docs` tool `document-pr` calls in its own step 2.
+    useSkill(documentPrSkill);
+    useSkill(prSubsectionSkill);
+    useSkill(mdocConventions);
+    useTool(classifyPrDocs);
+
     // Two tools while the kind is unknown, and both are plain rather than `harness: true`: they
     // start no sub-conversation, consume no delegation depth, and can re-enter nothing — so neither
     // needs the phase guard. Neither can run twice either, because recording a kind retires this
