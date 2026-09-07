@@ -4,9 +4,9 @@ already in the sidebar, and staying there is the point.
 
 This is the small half of "document this PR." The other half — a PR introducing a genuinely new
 module, type, or feature, with nothing existing to extend — is a full new page, and that is
-`src/agent.ts` (`flue run src/agent.ts -m "document PR #<n>"`), not this agent: its own gate
+`src/agent.ts` (`flue run src/agent.ts -m "document PR #<n>"`), not this skill: its own gate
 instructions already read the PR and take the kind and subject from what it changed. Reach for this
-agent only when something already documents the area the PR lands in.
+skill only when something already documents the area the PR lands in.
 
 ## What you do
 

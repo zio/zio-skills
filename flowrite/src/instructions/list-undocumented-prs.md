@@ -74,7 +74,8 @@ resolves those placeholders itself from the current directory.
      newest-merged first within each group: number, title, merge date, labels, why docs are needed
      (the tool's `reason`), and a suggested action —
      - 🔴 on a PR that introduced something genuinely new → `flue run src/agent.ts -m "document PR #<N>"`
-     - 🔴 on a PR that only touches something already documented → `flue run src/pr-subsection.ts -m "document PR #<N> as a subsection"`
+     - 🔴 on a PR that only touches something already documented → no flowrite agent for that; use the
+       `docs-pr-subsection` skill
      - 🟠 / 🟡 → `flue run src/enrich-section.ts -m "enrich <section> in <path>"`, naming the stub/thin
        path you found
      - ⚠️ Uncertain → name the gate ID and the reason, and say it needs a human read before either path

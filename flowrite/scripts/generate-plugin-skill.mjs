@@ -252,15 +252,15 @@ const MANIFEST = [
       description:
         'Turn a GitHub pull request into one subsection appended to a page that already documents ' +
         'the area it touches — no new page, no sidebar edit. Use for a PR that only enhances or ' +
-        'fixes something already documented. Generated from flowrite; overlaps with Path 3c of ' +
-        'plugins/documentation\'s docs-document-pr — this is a staged comparison, not a replacement.',
+        'fixes something already documented, or when the docs-document-pr skill names this as the ' +
+        'subsection case.',
       'argument-hint': '"<PR number>"',
       'allowed-tools': 'Read, Edit, Grep, Bash(gh:*), Bash(sbt:*), Bash(git:*)',
     },
     instructions: 'src/instructions/pr-subsection.md',
     substitutions: [
       [
-        'This is the small half of "document this PR." The other half — a PR introducing a genuinely new\nmodule, type, or feature, with nothing existing to extend — is a full new page, and that is\n`src/agent.ts` (`flue run src/agent.ts -m "document PR #<n>"`), not this agent: its own gate\ninstructions already read the PR and take the kind and subject from what it changed. Reach for this\nagent only when something already documents the area the PR lands in.',
+        'This is the small half of "document this PR." The other half — a PR introducing a genuinely new\nmodule, type, or feature, with nothing existing to extend — is a full new page, and that is\n`src/agent.ts` (`flue run src/agent.ts -m "document PR #<n>"`), not this skill: its own gate\ninstructions already read the PR and take the kind and subject from what it changed. Reach for this\nskill only when something already documents the area the PR lands in.',
         'This is the small half of "document this PR." The other half — a PR introducing a genuinely new\nmodule, type, or feature, with nothing existing to extend — is a full new page: use the\n`docs-document-pr` skill instead. Reach for this skill only when something already documents the area\nthe PR lands in.',
       ],
       [
@@ -353,12 +353,64 @@ const MANIFEST = [
         '   Build `{"title": ..., "labels": [...], "files": [...]}` from the two calls above (the `files`\n   array needs only `path` and `status` per entry) and run:\n\n   ```bash\n   echo \'<the json>\' | node ${CLAUDE_PLUGIN_ROOT}/skills/docs-list-undocumented-prs-v2/classify-pr-docs.mjs\n   ```\n\n   It returns `requiresDocs` (`yes`/`no`/`uncertain`), which gate fired, and why. Trust it; the gate\n   table is fixed and this script applies it exactly, so there is nothing to re-derive by hand.',
       ],
       [
-        '- 🔴 on a PR that introduced something genuinely new → `flue run src/agent.ts -m "document PR #<N>"`\n     - 🔴 on a PR that only touches something already documented → `flue run src/pr-subsection.ts -m "document PR #<N> as a subsection"`\n     - 🟠 / 🟡 → `flue run src/enrich-section.ts -m "enrich <section> in <path>"`, naming the stub/thin\n       path you found',
-        "- 🔴 on a PR that introduced something genuinely new → the `docs-document-pr` skill\n     - 🔴 on a PR that only touches something already documented → the `docs-document-pr` skill's\n       subsection path, or `docs-pr-subsection`\n     - 🟠 / 🟡 → the `docs-enrich-section` skill, naming the stub/thin path you found",
+        '- 🔴 on a PR that introduced something genuinely new → `flue run src/agent.ts -m "document PR #<N>"`\n     - 🔴 on a PR that only touches something already documented → no flowrite agent for that; use the\n       `docs-pr-subsection` skill\n     - 🟠 / 🟡 → `flue run src/enrich-section.ts -m "enrich <section> in <path>"`, naming the stub/thin\n       path you found',
+        "- 🔴 on a PR that introduced something genuinely new → the `docs-document-pr` skill\n     - 🔴 on a PR that only touches something already documented → the `docs-pr-subsection` skill\n     - 🟠 / 🟡 → the `docs-enrich-section` skill, naming the stub/thin path you found",
       ],
       [
         "is this run's own final answer, not a file you create. `.flowrite/pr-audit-state.json` stays local:\nsay once, only if the checkout's `.gitignore` doesn't already exclude `.flowrite/`, that it should.",
         "is this run's own final answer, not a file you create. `.docs-audit-state.json` stays local: say\nonce, only if the checkout's `.gitignore` doesn't already exclude it, that it should.",
+      ],
+    ],
+    references: [],
+    scripts: [
+      {
+        from: '../plugins/documentation/skills/docs-list-undocumented-prs/classify-pr-docs.mjs',
+        to: 'classify-pr-docs.mjs',
+      },
+    ],
+  },
+  {
+    name: 'docs-document-pr',
+    frontmatter: {
+      name: 'docs-document-pr',
+      description:
+        'Decide, from a bare PR number, whether it needs a full new page, a subsection on an existing ' +
+        'page, or nothing at all — then name the right skill for the job, writing nothing itself. Use ' +
+        'when the user asks to document a PR and it is not already clear whether that means a new ' +
+        'page or an addition to one that exists.',
+      'argument-hint': '"<PR number>"',
+      'allowed-tools': 'Read, Glob, Grep, Bash(gh:*), Bash(node:*)',
+    },
+    instructions: 'src/instructions/document-pr.md',
+    substitutions: [
+      [
+        'You decide, from a bare PR number, whether "document this PR" means a full new page, a subsection on an\nexisting page, or nothing at all. For the subsection case you hand off to the skill that does it; for\nthe new-page case there is no one to hand off to but yourself — see step 4. Either way, you write no\nsubsection and touch no sidebar directly; that happens only once the right phase takes over.',
+        'You decide, from a bare PR number, whether "document this PR" means a full new page, a subsection ' +
+          'on an existing page, or nothing at all, then name the skill that does it. You write no ' +
+          'subsection and touch no sidebar yourself; that happens only once the right skill takes over.',
+      ],
+      [
+        'This is the front door for "document PR #<n>" when the requester does not already know which of the two\napplies. You are mounted on `src/agent.ts` itself, alongside its own gate instructions and the\n`set_document_kind` tool that records a new-page decision — so the new-page case is not a hand-off to a\nseparate agent, it is simply recording the decision and letting this same conversation continue. The\nsubsection case has no such shortcut: it is the separate `docs-pr-subsection` skill, applied by hand or\nthrough Claude Code, not a `flue run`. Deciding which of the two applies *before* either path starts is\nthe whole reason this skill exists, so a requester (or this agent, reading its own request) never has to\nguess first.',
+        'This is the front door for "document PR #<n>" when the requester does not already know which of the ' +
+          'two applies. Use it before invoking `docs-data-type-ref`, `docs-module-ref`, `docs-tutorial`, ' +
+          '`docs-how-to-guide`, or `docs-pr-subsection` directly, so the requester never has to guess ' +
+          'which one first.',
+      ],
+      [
+        'Call `classify_pr_docs` with the PR title, its label names, and that files array. When it returns\n   `requiresDocs: "no"`, report its `reason` and stop — you write nothing. Trust it: the gate table is\n   fixed and this tool applies it exactly, the same reasoning `list-undocumented-prs.md` gives for not\n   re-deriving the table by hand.',
+        'Build `{"title": ..., "labels": [...], "files": [...]}` from the title, label names, and that\n   files array, and run:\n\n   ```bash\n   echo \'<the json>\' | node ${CLAUDE_PLUGIN_ROOT}/skills/docs-document-pr/classify-pr-docs.mjs\n   ```\n\n   When it returns `requiresDocs: "no"`, report its `reason` and stop — you write nothing. Trust it:\n   the gate table is fixed and this script applies it exactly, the same reasoning\n   `docs-list-undocumented-prs` gives for not re-deriving the table by hand.',
+      ],
+      [
+        '4. **Act on the decision:**\n   - New-page case → this skill only established that a new page is warranted, not which of the four\n     kinds (`data-type`/`module`/`tutorial`/`how-to`) — classify that the same way the request-reading\n     instructions above this skill already describe, then call `set_document_kind` with that kind and\n     the subject you read from the PR. Nothing to hand off: that tool is already available in this same\n     conversation, and recording the decision is what lets it continue straight into the write.\n   - Subsection case → tell the requester to use the `docs-pr-subsection` skill, and stop. That skill is\n     not mounted here, so this is a real hand-off, not a tool call.',
+        '4. **Act on the decision:**\n   - New-page case → tell the requester which page-kind skill fits — `docs-data-type-ref` (one\n     data type), `docs-module-ref` (a module of related types), `docs-tutorial` (learning-oriented),\n     or `docs-how-to-guide` (task-oriented) — and stop.\n   - Subsection case → tell the requester to use the `docs-pr-subsection` skill, and stop.',
+      ],
+      [
+        'For the subsection case, you are not the `docs-pr-subsection` skill — you name it and stop, you do not\napply it yourself. For the new-page case there is nothing else to not be: recording the decision with\n`set_document_kind` is the entire job, and the writing that follows belongs to the phase that decision\nunlocks, not to a second skill you would be duplicating.',
+        'You are not `docs-data-type-ref`, `docs-module-ref`, `docs-tutorial`, `docs-how-to-guide`, or\n`docs-pr-subsection` — you make the call among them and stop there. Writing any part of a page yourself\nis out of scope.',
+      ],
+      [
+        "PR title, linked issues found, which of the three outcomes applied (no docs needed / new page /\nsubsection) and why. For the new-page outcome, the kind and subject you recorded. For the subsection\noutcome, that you're using the `docs-pr-subsection` skill. If you stopped to ask instead, say what made\nthe PR ambiguous.",
+        "PR title, linked issues found, which of the three outcomes applied (no docs needed / new page /\nsubsection) and why, and — for the two writing outcomes — which skill you're handing off to. If you\nstopped to ask instead, say what made the PR ambiguous.",
       ],
     ],
     references: [],
