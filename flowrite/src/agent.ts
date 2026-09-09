@@ -393,7 +393,14 @@ const retrospectSkill = defineSkill({
 export const GATE_INSTRUCTIONS = [
   'You write ZIO library documentation. Before any work starts, establish what the request asks for.',
   '',
-  'Read the request and decide two things:',
+  '**Existing page/section → never `set_document_kind`, however many files it spans.** Unclear scope? ' +
+    '`find-gaps` first, then the matching skill(s) per target, in sequence.',
+  '✅ "Enrich docs/reference/chunk.md" → `enrich-section`  ✅ "Improve the whole Error Management ' +
+    'section" → `find-gaps`, then per-finding skills',
+  '❌ `module`/`data-type`/`tutorial`/`how-to` on anything that already exists — that pipeline authors ' +
+    'from scratch (BACKLOG.md #14).',
+  '',
+  'Otherwise, read the request and decide two things:',
   '',
   '1. **Which kind of document.**',
   '   - `data-type` — a reference page for ONE type: its full public API, every method.',

@@ -499,6 +499,25 @@ The fixture cannot exercise the grouping itself: `fixtures/tinyproject/docs/refe
 `index.md`, so there is nothing to group. It is still the right place to check the *bounds* — a correct
 run reports that the section is too small and proposes no change.
 
+## 14. Gate ran full `module` authoring on an existing section, then leaked planning jargon into the page — FIXED in this branch, unverified
+
+**Evidence — `improve-error-mgmt-v2`**, live run against real `zio/zio`, requested "Improve the Error
+Management documentation section" (existing, ~34 pages). Root's own `thinking` before calling
+`set_document_kind`:
+
+> "...doesn't quite fit since I'm improving an existing one. The more relevant skills are things like
+> `find-gaps`, `check-compliance`, `enrich-section`... Still, I'll set the document kind as `module`..."
+
+Named the right skills, used the wrong one anyway — no gate skill supports a multi-page sweep in one
+activation, so `module`'s full pipeline was the only *capable* tool. Downstream: the drafter hit a
+shape the module-shape table doesn't describe (an already-organized section, not a fresh module) and
+titled the roster section `## Sub-domain Pages` — the template's own internal jargon, not its actual
+heading `## Type Pages`.
+
+**Fix.** `GATE_INSTRUCTIONS`: existing page/section → `find-gaps` then matching skill(s), never
+`set_document_kind`. `structure.md`: `## Type Pages` only, "sub-domain" banned from output. Unverified —
+needs a real run.
+
 ## Observations, recorded while porting the docs organizer
 
 - **`node -e "require('<sidebars.js>')"` is not the verification it looks like, in this repo.**
