@@ -2,9 +2,10 @@
 #
 # scan-undocumented.sh — Scans a ZIO library project for documentation gaps.
 #
-# Invoked by `src/find-gaps.ts`, the same way `backfill-metadata.sh` and `archive-docs.sh` are:
-# a standalone bash utility the agent runs directly by absolute path, not a Flue tool, because its
-# output is a Markdown report for the model to read and enrich — not structured data a gate consumes.
+# Invoked by the `find-gaps` skill mounted on `src/agent.ts`'s gate phase, the same way
+# `backfill-metadata.sh` drives the `backfill-metadata` gate skill in a loop: a standalone bash
+# utility the agent runs directly by absolute path, not a Flue tool, because its output is a Markdown
+# report for the model to read and enrich — not structured data a gate consumes.
 
 usage() {
   cat <<'EOF'

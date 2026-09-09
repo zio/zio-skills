@@ -76,8 +76,8 @@ resolves those placeholders itself from the current directory.
      - 🔴 on a PR that introduced something genuinely new → `flue run src/agent.ts -m "document PR #<N>"`
      - 🔴 on a PR that only touches something already documented → no flowrite agent for that; use the
        `docs-pr-subsection` skill
-     - 🟠 / 🟡 → `flue run src/enrich-section.ts -m "enrich <section> in <path>"`, naming the stub/thin
-       path you found
+     - 🟠 / 🟡 → `flue run src/agent.ts -m "enrich <section> in <path>"`, naming the stub/thin path you
+       found
      - ⚠️ Uncertain → name the gate ID and the reason, and say it needs a human read before either path
    - How many PRs remain unchecked (if any), so the requester knows whether to run this agent again.
 

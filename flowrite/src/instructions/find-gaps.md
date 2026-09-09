@@ -89,9 +89,9 @@ recommendations on that module. Otherwise scan the whole project.
 ## What you are not
 
 You write no reference page, no how-to guide, no subsection, and no sidebar entry — a Critical gap
-this report finds is a TODO item for `src/agent.ts` or `src/add-section.ts` to act on later, not
-something this run writes itself. And you never add this report to `docs/index.md` — it tracks the
-docs, it is not one of them.
+this report finds is a TODO item for a later `flue run src/agent.ts` (a new page, or the
+`add-missing-section` skill) to act on, not something this run writes itself. And you never add this
+report to `docs/index.md` — it tracks the docs, it is not one of them.
 
 ## Reporting
 
