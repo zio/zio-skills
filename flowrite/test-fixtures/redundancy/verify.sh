@@ -14,9 +14,10 @@
 # no sbt, no mdoc), diffs the result against what it planted, and removes the page again. The fixture
 # is left at baseline either way — including on interrupt, which is why cleanup runs from a trap.
 #
-# Requires .env.testing with a working ANTHROPIC_API_KEY. That file pins the write-flow roles to Haiku
-# and says nothing about REDUNDANCY_EDITOR_MODEL, so the editor runs on its default Sonnet tier —
-# testing it on a weaker model than it ships on proves nothing.
+# Requires .env.testing with a working ANTHROPIC_API_KEY. The redundancy editor is now the
+# `reduce-redundancy` gate skill on `src/agent.ts`, so it runs under the gate's own tier
+# (`TIERS.writer`, Sonnet/high) rather than a dedicated `REDUNDANCY_EDITOR_MODEL` — testing it on a
+# weaker model than it ships on proves nothing.
 #
 # ---------------------------------------------------------------------------------------------
 # The 7 seeded redundancies:
@@ -79,7 +80,7 @@ data="$(jq -nc --arg p "$fixture" '{projectPath:$p}')"
 
 echo "log: $log"
 (cd "$root" && env NODE_USE_ENV_PROXY=1 no_proxy=localhost,127.0.0.1 \
-  ./node_modules/.bin/flue run src/redundancy.ts \
+  ./node_modules/.bin/flue run src/agent.ts \
   --env .env.testing -m "$request" --data "$data") > "$log" 2>&1
 status=$?
 

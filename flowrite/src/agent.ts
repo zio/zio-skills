@@ -7,6 +7,7 @@ import {
   useSkill,
   useTool,
 } from '@flue/runtime';
+import { fileURLToPath } from 'node:url';
 import * as v from 'valibot';
 
 // instructions — one per kind. These files are the real per-kind content and are unchanged by the
@@ -19,6 +20,31 @@ import howToGuideMd from './instructions/how-to-guide.md';
 // `documentPrSkill`/`prSubsectionSkill` doc-comment below for why these two and not a third file).
 import documentPrMd from './instructions/document-pr.md';
 import prSubsectionMd from './instructions/pr-subsection.md';
+// Same gate-phase mechanism as the two above: a maintenance pass over a checkout that already
+// exists, mounted directly rather than given its own now-deleted `src/find-gaps.ts` entry point.
+import findGapsMd from './instructions/find-gaps.md';
+// The rest of the former standalone maintenance agents, folded in the same way: each edits or reports
+// on pages that already exist, so each earns a gate skill rather than its own now-deleted entry point.
+import addSectionMd from './instructions/add-section.md';
+import checkComplianceMd from './instructions/check-compliance.md';
+import crossrefMd from './instructions/crossref.md';
+import enrichSectionMd from './instructions/enrich-section.md';
+import listUndocumentedPrsMd from './instructions/list-undocumented-prs.md';
+import metadataMd from './instructions/metadata.md';
+import organizeMd from './instructions/organize.md';
+import redundancyMd from './instructions/redundancy.md';
+import retrospectMd from './instructions/retrospect.md';
+// Reference material each of those agents used to concatenate onto its own return value rather than
+// mount as a skill (see each deleted file's own comment: mounting costs a round trip that is pure loss
+// when the content is needed on turn 1 of every run). Folded into each skill's `instructions` string
+// below for the same reason, now that activating the skill itself is the round trip that was accepted.
+import addSectionGuide from './skills/add-missing-section/references/section-patterns.md';
+import writingStyleRules from './skills/writing-style/references/rules.md';
+import crossLinkerGuide from './skills/cross-linker/references/guide.md';
+import enrichSectionGuide from './skills/enrich-section/references/pattern.md';
+import backfillMetadataRules from './skills/backfill-metadata/references/rules.md';
+import organizeGuide from './skills/organize-reference-docs/references/guide.md';
+import reduceRedundancyGuide from './skills/reduce-redundancy/references/guide.md';
 
 import {
   type RunFacts,
@@ -65,9 +91,16 @@ import markdownTable from './skills/markdown-table/SKILL.md';
 // Ordinary tools, mounted unguarded. Deterministic and free, so the writer can iterate against them
 // instead of waiting for the review phase to discover a gap.
 import { checkMethodCoverage } from './tools/check-method-coverage.ts';
-// The deterministic "does this PR need docs at all" gate `documentPrSkill` calls into — same tool
-// `list-undocumented-prs.ts` uses, reused rather than re-derived.
+// The deterministic "does this PR need docs at all" gate `documentPrSkill` calls into — shared with
+// the `list-undocumented-prs` gate skill below, reused rather than re-derived.
 import { classifyPrDocs } from './tools/classify-pr-docs.ts';
+
+/**
+ * Resolved once at module load: the scanner lives in THIS package (`flowrite/scripts/`), not in the
+ * checkout the sandbox is rooted at, so the model needs an absolute path handed to it rather than a
+ * path relative to its own cwd. Ported from `src/find-gaps.ts`'s identical constant.
+ */
+const GAP_SCANNER_PATH = fileURLToPath(new URL('../scripts/scan-undocumented.sh', import.meta.url));
 
 // FLUE_VERBOSE_TOOLS=1 opts into full tool/delegation/turn detail. Installed once, here, because
 // this module is now the single entry point for every kind of document.
@@ -190,13 +223,12 @@ const initialData = v.optional(v.object({ ...docsWriterFields }), {});
 /**
  * Mounted only during the gate render (kind unknown), activated by the model rather than always in
  * the prompt — the same `activate_skill` mechanism Claude Code's skills use, per flue's own "Skills"
- * guide. Two, not three: the new-page case needs no skill of its own, because GATE_INSTRUCTIONS below
- * already tells the model to read a PR directly and call `set_document_kind` — the same tool this
- * render already has. `document-pr` earns its place for the part GATE_INSTRUCTIONS does NOT do
- * deterministically (ruling out "no docs needed" via `classify_pr_docs` before falling back to
- * judgment) and for naming the subsection case; `pr-subsection` earns its place because, once
- * activated, this same conversation can just carry it out — fetch, decide, write, verify, commit —
- * with no separate `flue run` needed, unlike when these lived in their own now-deleted agent files.
+ * guide. Twelve, not thirteen: the new-page case needs no skill of its own, because GATE_INSTRUCTIONS
+ * below already tells the model to read a PR directly and call `set_document_kind` — the same tool
+ * this render already has. Every other maintenance job flowrite does — PR triage, gap-finding,
+ * section repair, page hygiene, cross-linking, sidebar grouping, coverage auditing, self-retrospection
+ * — earns a skill instead, because once activated, this same conversation can just carry the job out
+ * with no separate `flue run` needed, unlike when each lived in its own now-deleted agent file.
  */
 const documentPrSkill = defineSkill({
   name: 'document-pr',
@@ -217,6 +249,137 @@ const prSubsectionSkill = defineSkill({
 });
 
 /**
+ * Same mounting mechanism as the two skills above, for the same reason: a maintenance pass over a
+ * checkout that already exists, not a new page — activated once the model reads a request like "find
+ * documentation gaps", carried out in this same conversation via the sandbox's bash access
+ * (`useRunBasics` already attaches it) with no separate `flue run` needed, unlike when this lived in
+ * its own now-deleted `src/find-gaps.ts`.
+ */
+const findGapsSkill = defineSkill({
+  name: 'find-gaps',
+  description:
+    'Survey a checkout (or one named module within it) for documentation gaps and write one report, ' +
+    '`docs/undocumented-report.md` — no page is written, no page is edited, no sidebar changes. Use ' +
+    'when asked to find documentation gaps, audit doc coverage, or report what is undocumented.',
+  instructions: findGapsMd.replace('<scanner-path>', GAP_SCANNER_PATH),
+});
+
+/**
+ * Inserts one missing section into an existing reference page, at its canonical position, fully
+ * written and mdoc-verified. The section-type templates travel with the skill's instructions rather
+ * than a separate mount, for the same reason `find-gaps` folds its scanner path in directly: they are
+ * needed on turn 1 of the one job this skill does, so a second activation round trip buys nothing.
+ */
+const addSectionSkill = defineSkill({
+  name: 'add-missing-section',
+  description:
+    'Add one missing section (e.g. Comparison, Advanced Usage) to an existing reference page, at its ' +
+    'canonical position. Use when asked to add a section that page does not have yet — not for a ' +
+    'section that exists but is thin (that is `enrich-section`).',
+  instructions: [addSectionMd, '', '# Section-type patterns', '', addSectionGuide].join('\n'),
+});
+
+/** Audits one existing page against the writing-style rules, the mdoc-conventions rules, or both. */
+const checkComplianceSkill = defineSkill({
+  name: 'check-compliance',
+  description:
+    'Audit one existing page against the writing-style rules, the mdoc-conventions rules, or both, ' +
+    'fixing every violation and proving the page still compiles. Use when asked to check, audit, or ' +
+    'verify a page\'s compliance with style or mdoc conventions.',
+  instructions: [
+    checkComplianceMd,
+    '',
+    '# Writing-style rules (numbered, 1-28)',
+    '',
+    writingStyleRules,
+    '',
+    '# mdoc-conventions rules',
+    '',
+    mdocConventions,
+  ].join('\n'),
+});
+
+/** Makes one orphan documentation page reachable by adding inbound prose links from pages that already discuss its subject. */
+const crossrefSkill = defineSkill({
+  name: 'cross-link-page',
+  description:
+    'Make one orphan documentation page reachable by adding inbound prose links from pages that ' +
+    'already discuss its subject. Use when asked to cross-link, link in, or make reachable a page ' +
+    'that nothing currently links to.',
+  instructions: [crossrefMd, '', '# The linking guide', '', crossLinkerGuide].join('\n'),
+});
+
+/**
+ * Expands one thin section of an existing reference page — signature and toy example, no motivation —
+ * into one that explains why a reader would choose this API, using the five-part expansion pattern.
+ */
+const enrichSectionSkill = defineSkill({
+  name: 'enrich-section',
+  description:
+    'Expand one thin section of an existing reference page (signature and toy example, no ' +
+    'motivation) into one that explains when and why to reach for this API. Use when a section ' +
+    'exists but reads shallow — not for a section that does not exist yet (that is `add-missing-section`).',
+  instructions: [enrichSectionMd, '', '# The five-part expansion pattern', '', enrichSectionGuide].join(
+    '\n',
+  ),
+});
+
+/**
+ * Audits one batch of merged PRs for missing documentation. Shares `classify_pr_docs` with
+ * `document-pr` above — same deterministic gate table, reused rather than re-derived.
+ */
+const listUndocumentedPrsSkill = defineSkill({
+  name: 'list-undocumented-prs',
+  description:
+    'Audit one batch of merged PRs for missing documentation: fetch each, classify whether it needs ' +
+    'docs, grade existing coverage, and report. Use when asked to audit merged PRs for missing docs, ' +
+    'or to find undocumented PRs — not for a single named PR (that is `document-pr`).',
+  instructions: listUndocumentedPrsMd,
+});
+
+/** Fills a documentation page's missing `description` and `keywords` frontmatter. */
+const metadataSkill = defineSkill({
+  name: 'backfill-metadata',
+  description:
+    'Fill a documentation page\'s missing `description` and/or `keywords` frontmatter. Use when ' +
+    'asked to backfill, fill in, or add missing metadata/frontmatter to one page.',
+  instructions: [metadataMd, '', '# The fields you write', '', backfillMetadataRules].join('\n'),
+});
+
+/** Groups an existing reference section into sidebar categories, each with an index page. */
+const organizeSkill = defineSkill({
+  name: 'organize-reference-docs',
+  description:
+    'Group an existing reference section into sidebar categories, each with an index page — moves no ' +
+    'files. Use when asked to organize, categorize, or restructure the sidebar for a reference section.',
+  instructions: [organizeMd, '', '# The organizing guide', '', organizeGuide].join('\n'),
+});
+
+/** Removes repetition from one finished documentation page, without cutting information. */
+const redundancySkill = defineSkill({
+  name: 'reduce-redundancy',
+  description:
+    'Remove repetition from one finished documentation page — restated definitions, redundant ' +
+    'transitions, repeated sentences — without cutting information. Use when asked to reduce ' +
+    'redundancy, tighten, or de-duplicate a page.',
+  instructions: [redundancyMd, '', '# The guide', '', reduceRedundancyGuide].join('\n'),
+});
+
+/**
+ * Closes the feedback loop on one flowrite run: reads its log, compares actual behavior against the
+ * instructions and skills that governed it, classifies every real deviation, and applies the smallest
+ * edit that would have prevented it. No guide file to fold in — the instructions are the whole job.
+ */
+const retrospectSkill = defineSkill({
+  name: 'retrospect',
+  description:
+    'Read a past flowrite run\'s log, compare its actual behavior against the instructions/skills ' +
+    'that governed it, and apply the smallest edit that would have prevented any real deviation. Use ' +
+    'when asked to retrospect a run, or to fix flowrite itself based on how a run went.',
+  instructions: retrospectMd,
+});
+
+/**
  * The gate render's instructions: before the kind is known, the only thing to do is establish it.
  *
  * Ambiguity must stop the run rather than resolve it. "Write docs for Chunk" genuinely fits both a
@@ -230,7 +393,14 @@ const prSubsectionSkill = defineSkill({
 export const GATE_INSTRUCTIONS = [
   'You write ZIO library documentation. Before any work starts, establish what the request asks for.',
   '',
-  'Read the request and decide two things:',
+  '**Existing page/section → never `set_document_kind`, however many files it spans.** Unclear scope? ' +
+    '`find-gaps` first, then the matching skill(s) per target, in sequence.',
+  '✅ "Enrich docs/reference/chunk.md" → `enrich-section`  ✅ "Improve the whole Error Management ' +
+    'section" → `find-gaps`, then per-finding skills',
+  '❌ `module`/`data-type`/`tutorial`/`how-to` on anything that already exists — that pipeline authors ' +
+    'from scratch (BACKLOG.md #14).',
+  '',
+  'Otherwise, read the request and decide two things:',
   '',
   '1. **Which kind of document.**',
   '   - `data-type` — a reference page for ONE type: its full public API, every method.',
@@ -286,12 +456,24 @@ export function DocsWriter() {
   const facts = useRunBasics(initialData, request, kind);
 
   if (kind === null || subject === null) {
-    // PR-shaped requests: the two skills above, activated by the model rather than always in the
-    // prompt, plus what `pr-subsection` needs to actually carry out a write here — `mdoc-conventions`
-    // (writing-style is already mounted for every render, inside `useRunBasics`) and the
-    // `classify_pr_docs` tool `document-pr` calls in its own step 2.
+    // Every gate-phase skill flowrite has, activated by the model rather than always in the prompt.
+    // `mdoc-conventions` is mounted alongside them for the skills that write runnable examples
+    // (`pr-subsection`, `add-missing-section`, `enrich-section`); writing-style is already mounted for
+    // every render, inside `useRunBasics`. `classify_pr_docs` backs both `document-pr` (step 2) and
+    // `list-undocumented-prs`. Every other skill here needs neither: its sandbox bash access is
+    // already attached by `useRunBasics`, and none of them write a new page.
     useSkill(documentPrSkill);
     useSkill(prSubsectionSkill);
+    useSkill(findGapsSkill);
+    useSkill(addSectionSkill);
+    useSkill(checkComplianceSkill);
+    useSkill(crossrefSkill);
+    useSkill(enrichSectionSkill);
+    useSkill(listUndocumentedPrsSkill);
+    useSkill(metadataSkill);
+    useSkill(organizeSkill);
+    useSkill(redundancySkill);
+    useSkill(retrospectSkill);
     useSkill(mdocConventions);
     useTool(classifyPrDocs);
 

@@ -10,8 +10,8 @@ The five-part expansion pattern is provided verbatim in the enrich-section agent
 part takes, the contrast-table format, the realistic-example checklist, and the common mistakes that
 turn an enrichment into bloat instead of improvement.
 
-Nothing mounts this skill today: `src/enrich-section.ts` imports the reference directly, because a
-single-purpose agent needs the pattern on turn 1 of every run and progressive disclosure would only
-add a turn and a way to skip it. The directory is a skill so that a consumer which needs it
-*sometimes* — the drafter, checking a section it just wrote is not itself thin — can mount it without
-moving content.
+Nothing mounts this skill today: the `enrich-section` gate skill in `src/agent.ts` folds the reference
+in directly, because that single-purpose skill needs the pattern on turn 1 of every activation and
+progressive disclosure would only add a turn and a way to skip it. The directory is a skill so that a
+consumer which needs it *sometimes* — the drafter, checking a section it just wrote is not itself thin
+— can mount it without moving content.

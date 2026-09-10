@@ -39,8 +39,9 @@
 # about the agent.
 # ---------------------------------------------------------------------------------------------
 #
-# Requires .env.testing with a working ANTHROPIC_API_KEY. That file pins the write-flow roles to
-# Haiku and says nothing about METADATA_WRITER_MODEL, so the backfiller runs on its own default tier.
+# Requires .env.testing with a working ANTHROPIC_API_KEY. The backfiller is now the
+# `backfill-metadata` gate skill on `src/agent.ts`, so it runs under the gate's own tier
+# (`TIERS.writer`, Sonnet/high) rather than a dedicated `METADATA_WRITER_MODEL`.
 #
 # The fixture is a from-scratch baseline and must never keep these pages, so they are planted in a
 # SUBDIRECTORY of its docs tree and the trap removes the whole directory. The four pages committed

@@ -323,8 +323,8 @@ const MANIFEST = [
       ],
       ['(The exact path is given below, computed for this checkout.) ', ''],
       [
-        'a TODO item for `src/agent.ts` or `src/add-section.ts` to act on later,',
-        'a TODO item for `docs-document-pr` or `docs-add-missing-section` to act on later,',
+        'a TODO item for a later `flue run src/agent.ts` (a new page, or the\n`add-missing-section` skill) to act on, not',
+        'a TODO item for `docs-document-pr` or `docs-add-missing-section` to act on later, not',
       ],
     ],
     references: [],
@@ -353,7 +353,7 @@ const MANIFEST = [
         '   Build `{"title": ..., "labels": [...], "files": [...]}` from the two calls above (the `files`\n   array needs only `path` and `status` per entry) and run:\n\n   ```bash\n   echo \'<the json>\' | node ${CLAUDE_PLUGIN_ROOT}/skills/docs-list-undocumented-prs-v2/classify-pr-docs.mjs\n   ```\n\n   It returns `requiresDocs` (`yes`/`no`/`uncertain`), which gate fired, and why. Trust it; the gate\n   table is fixed and this script applies it exactly, so there is nothing to re-derive by hand.',
       ],
       [
-        '- 🔴 on a PR that introduced something genuinely new → `flue run src/agent.ts -m "document PR #<N>"`\n     - 🔴 on a PR that only touches something already documented → no flowrite agent for that; use the\n       `docs-pr-subsection` skill\n     - 🟠 / 🟡 → `flue run src/enrich-section.ts -m "enrich <section> in <path>"`, naming the stub/thin\n       path you found',
+        '- 🔴 on a PR that introduced something genuinely new → `flue run src/agent.ts -m "document PR #<N>"`\n     - 🔴 on a PR that only touches something already documented → no flowrite agent for that; use the\n       `docs-pr-subsection` skill\n     - 🟠 / 🟡 → `flue run src/agent.ts -m "enrich <section> in <path>"`, naming the stub/thin path you\n       found',
         "- 🔴 on a PR that introduced something genuinely new → the `docs-document-pr` skill\n     - 🔴 on a PR that only touches something already documented → the `docs-pr-subsection` skill\n     - 🟠 / 🟡 → the `docs-enrich-section` skill, naming the stub/thin path you found",
       ],
       [

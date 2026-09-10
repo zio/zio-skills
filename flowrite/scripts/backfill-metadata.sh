@@ -31,7 +31,7 @@
 # An earlier design had this script copy each page first, then assert the body was untouched and the
 # new fields well-formed, and restore the copy if not. Dropped, on CLAUDE.md's rule: "Instruct first,
 # run it, wrap only what you WATCHED fail." Nobody has watched this agent damage a page, and this repo
-# has deleted every tool it wrote against an imagined problem. src/redundancy.ts edits finished pages
+# has deleted every tool it wrote against an imagined problem. The `reduce-redundancy` gate skill edits finished pages
 # with nothing re-checking it either, and the answer there was to record the risk (BACKLOG.md finding
 # 9), not to invent a guard.
 #
@@ -123,7 +123,7 @@ while IFS= read -r page; do
   # "Connection error" and 0 tokens (see fixtures/tinyproject/scripts/run-data-type-ref.sh).
   if (cd "$flowrite_root" && env \
     NODE_USE_ENV_PROXY=1 no_proxy=localhost,127.0.0.1 \
-    ./node_modules/.bin/flue run src/metadata.ts \
+    ./node_modules/.bin/flue run src/agent.ts \
     --env "$env_file" \
     -m "Backfill frontmatter metadata in $rel" \
     --data "$(jq -nc --arg p "$project_root" '{projectPath:$p}')") >>"$log" 2>&1; then

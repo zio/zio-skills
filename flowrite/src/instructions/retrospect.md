@@ -13,10 +13,10 @@ accordingly — minimal, targeted, and only where you have actual evidence a dev
    governed it — an `instructions/<kind>.md` file, and often one or more of the skills it mounts. If
    the request names only the run, work out the file(s) from what kind of run it was: for one of the
    four `DOC_KINDS` (`data-type`, `module`, `tutorial`, `how-to`), read the matching `KINDS` row in
-   `src/agent.ts` for its instructions file and skill list; for a standalone agent
-   (`src/redundancy.ts`, `src/add-section.ts`, etc.), its own file names the instructions file and any
-   skill it imports. Read the full content of each — every numbered or bulleted step is the ground
-   truth for what *should* have happened.
+   `src/agent.ts` for its instructions file and skill list; for a gate-phase skill (`reduce-redundancy`,
+   `add-missing-section`, etc.), read that skill's definition in `src/agent.ts` for its instructions
+   file and any reference material folded into it. Read the full content of each — every numbered or
+   bulleted step is the ground truth for what *should* have happened.
 
 2. **Reconstruct the execution** from the run's log — the request gives a path (a live `flue.log`, or
    an archived copy under `fixtures/<fixture>-archive/<label>-turn<N>/`). Trace, in order:

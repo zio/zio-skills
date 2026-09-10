@@ -63,6 +63,17 @@ After the table, add one example demonstrating usage of a few predefined instanc
 
 ---
 
+## When to Use Section Pattern
+
+1. Add only when the page documents an operator with a genuine close alternative documented
+   elsewhere in the section, and neither page's opening prose already contrasts them — most pages
+   get nothing (see `add-section.md`'s stop conditions).
+2. Same "Use X when… / Use Y instead when…" pairing as the Comparison pattern above, without the
+   dimensions table: 2–4 sentences, cross-linked to the alternative's page.
+3. No code example — this is orientation between operators, not a comparison of whole types.
+
+---
+
 ## Advanced Usage Section Pattern
 
 Create 2–4 `###` subsections, each with:

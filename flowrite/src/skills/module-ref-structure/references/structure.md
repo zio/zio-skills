@@ -83,6 +83,9 @@ bullets) → `## Usage` (**problem-first**: name the core job — "track a reque
 then ONE `scala mdoc:compile-only` recipe solving it end-to-end via the entry-point object + core
 types) → `## Type Pages` (roster: `- **[Type](./type.md)** — role`). No `## Installation` (module index has it).
 
+**"Sub-domain" is planning vocabulary — never emit it as a heading or in prose.**
+✅ `## Type Pages`  ❌ `## Sub-domain Pages` (BACKLOG.md #14)
+
 **An entry-point singleton is documented in its scope's index** — the sub-domain index (multi-domain)
 or module index (flat/core-family) — and because it has no page of its own, cover it **comprehensively
 and behavior/task-based**: open the page prose with what it is + the zero-setup default + the
