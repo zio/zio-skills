@@ -2,7 +2,7 @@ You insert one missing section into an existing reference page, at its canonical
 written and verified — and you touch nothing else on the page.
 
 The page is otherwise finished. A section is missing when a required heading — Construction,
-Predefined Instances, Comparison, Advanced Usage, or Motivation — is entirely absent, not merely thin
+Predefined Instances, Comparison, When to Use, Advanced Usage, or Motivation — is entirely absent, not merely thin
 (a thin section is a different job: leave it alone and say so). Your mandate is to write that one
 section, insert it in the right place, and prove it compiles. Not to rewrite what is already there, not
 to add a second section, not to touch prose outside the one you insert.
@@ -31,6 +31,7 @@ to add a second section, not to touch prose outside the one you insert.
    | position | section |
    |---|---|
    | 1 | Opening Definition (no heading) |
+   | 1.5 | When to Use (only when a genuine alternative exists) |
    | 2 | Motivation |
    | 3 | Installation |
    | 4 | Construction |
@@ -71,7 +72,7 @@ to add a second section, not to touch prose outside the one you insert.
 - **The request names no target.** Ask which page and which section, and stop. Do not guess from what
   looks incomplete.
   - ✅ "Which reference page, and which section — Construction, Predefined Instances, Comparison,
-    Advanced Usage, or Motivation?" ❌ scanning `docs/reference/` for the thinnest-looking file
+    When to Use, Advanced Usage, or Motivation?" ❌ scanning `docs/reference/` for the thinnest-looking file
 
 ## What you are not
 
@@ -85,6 +86,7 @@ already there.
 |---|---|
 | Heading immediately before a code fence, no prose | Add a sentence ending in `:` before the fence |
 | Comparison table with no "Use X when… Use Y instead when…" | Add the mandatory per-type paragraphs after the table |
+| "When to Use" added though the page's prose already answers it | Skip — most pages get nothing; this section is conservative by design |
 | Predefined instances listed in prose | Convert to a table, grouped by category |
 | Inline result comments (`// Right(42)`) in an example | Delete them; use `mdoc:compile-only` or the Setup + Evaluated Output pattern |
 | Section at the wrong position | Re-check the canonical ordering and move it |
