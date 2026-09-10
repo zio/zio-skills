@@ -132,6 +132,17 @@ export function useRunBasics(schema: v.GenericSchema, request: string, kind: Doc
   // Owns useModel, so nothing here may call it again — it throws on a second call in one render.
   useDocsAuthorBase();
 
+  // Every render reaches here — the classification gate, every gate-phase maintenance skill, and
+  // the writing branch alike — so this is the one place a usage report can be guaranteed regardless
+  // of which path a run takes. It used to live only in `useDocsWriter`, which the gate branch never
+  // reaches (it returns `GATE_INSTRUCTIONS` before ever calling that hook) — a run that classified no
+  // kind (every maintenance pass: enrich-section, check-compliance, add-missing-section, cross-linker,
+  // organize, redundancy, backfill-metadata, find-gaps, document-pr…) printed no token/cost figures at
+  // all. `kind` stays the same value for a whole conversation once set (or stays null for the whole
+  // conversation when a run never classifies one), so the label is stable across a run's renders
+  // either way.
+  useUsageReport(kind ?? 'flowrite-gate');
+
   // cwd belongs to local(), not to useSandbox. local()'s cwd anchors the sandbox on the host and
   // defaults to process.cwd(); useSandbox's cwd only picks a directory *inside* an already-anchored
   // environment. Passing it to useSandbox left the sandbox rooted in flowrite itself, so workspace
@@ -224,7 +235,7 @@ export function useRoles(): void {
 
 /**
  * Shared composition for the writing branch of a docs writer: the role delegates, the guarded
- * phase tools, the kind's skills, the gh tool, the run reporter and the usage summary. Returns the
+ * phase tools, the kind's skills, the gh tool, and the run reporter. Returns the
  * instructions for the caller to return as its own.
  *
  * Model tier, sandbox and run context are NOT here — they belong to `useRunBasics`, which the agent
@@ -267,7 +278,8 @@ export function useDocsWriter(
   // the run?". It was exempt originally, and a phase duly filed the run's verdict mid-review.
   useTool(guardRootOnly(createReportRunResultTool(opts.label)));
 
-  useUsageReport(opts.label);
+  // The usage report itself is registered by `useRunBasics` (with this same label, once `kind` is
+  // set) so it also covers the gate branch that never reaches this function — see the comment there.
   useInstruction(`${opts.runDirective} ${SHARED_DIRECTIVE}`);
 
   // The skip list, in prose, because most phases are prose. See `skippedPhases()`: only the two
