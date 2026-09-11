@@ -431,7 +431,7 @@ const MANIFEST = [
  * every tool, which is the closest equivalent to a flowrite subagent inheriting its parent's sandbox
  * (none of these declare a `useTool` beyond researcher's `gh_query`, itself just a bash-wrapped
  * `git`/`gh` call the body already tells the model to run directly). `skills` mirrors a `useSkill()`
- * mount 1:1 — only `drafter` has any.
+ * mount 1:1 — `drafter` and `researcher` are the two that have any.
  *
  * `drafter`, `designer` AND `reviewer` are a known, documented gap, not a workaround: flowrite's
  * `drafter.ts` composes `structureBlock(docKind()) + styleBlock()`, `designer.ts` composes
@@ -458,6 +458,7 @@ const AGENT_MANIFEST = [
         'structured research answers in the shape the caller requests.',
       model: 'haiku',
       effort: 'low',
+      skills: 'docs-research',
     },
     instructions: 'src/subagents/researcher.md',
     substitutions: [
