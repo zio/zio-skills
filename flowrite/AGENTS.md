@@ -40,16 +40,23 @@ briefly forked into a differently-named, un-cross-referenced copy) and cost a de
    flowrite's new content is wrong), does the output look structurally sane, and — the one case that
    still needs a human decision — does a *new* flowrite skill or subagent need a *new* manifest entry
    (the generator only emits what's already listed; it won't notice a new source file on its own).
-   Three plugin skills are the standing exception, not because their flowrite counterpart might be
-   wrong, but because there is no flowrite counterpart to promote from at all:
+   Two cases are a standing exception, not because their flowrite counterpart might be wrong, but
+   because there is no flowrite counterpart to promote from at all:
    - `docs-organize-types` vs. flowrite's `organize-reference-docs` (→ `docs-organize-reference-docs`)
      — differently scoped tools that coexist on purpose, not a fork to reconcile.
    - `docs-examples` vs. `docs-companion-examples`/`docs-examples-builder` — a mechanical procedure
      skill vs. a delegation wrapper around the matching flowrite subagent; both stay.
-   - `docs-research`/`docs-integrate` — pre-existing plugin skills with **no** flowrite skill or
-     subagent-name match at all (`researcher`/`docs_integrator` are subagents, not skills). They are
-     out of scope for mechanical generation entirely; don't merge or delete them on the assumption
-     they're a stale fork of something in flowrite.
+   - `docs-integrate` — a pre-existing plugin skill with **no** flowrite skill or subagent-name match
+     at all (`docs_integrator` is a subagent, not a skill). Out of scope for mechanical generation
+     entirely; don't merge or delete it on the assumption it's a stale fork of something in flowrite.
+
+   `docs-research` is no longer in this list. It now has a real flowrite counterpart,
+   `src/skills/research/SKILL.md`, mounted into the `researcher` subagent via `useSkill` and declared
+   in `docs-researcher`'s `AGENT_MANIFEST` entry (`skills: 'docs-research'`) the same way `docs-drafter`
+   declares its mounted skills. Its plugin body is still hand-mirrored rather than generator-produced
+   — like `mdoc-conventions`/`ascii-diagram`/`markdown-table`/`writing-style`, it is a mounted
+   "expertise" skill, not an instruction-driven `MANIFEST`-generated one, so edit both copies together
+   and keep them byte-identical below the frontmatter.
 4. **Naming convention.** A flowrite skill named `X` maps to plugin skill `docs-X` under
    `plugins/documentation/skills/`. A flowrite subagent named `X` maps to plugin agent `docs-X` (or its
    already-`docs-`-prefixed name, e.g. `docs-integrator`) under `plugins/documentation/agents/`. If you
