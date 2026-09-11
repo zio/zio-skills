@@ -136,6 +136,12 @@ Identify every type that core methods depend on:
 
 ### Step 2: GitHub History Research
 
+Throughout this step, prefer a connected GitHub MCP server's structured read/search tools (names like
+`pull_request_read`/`issue_read`/`search_issues`, under whatever `mcp__<server>__` prefix this session
+uses) over `gh` CLI commands — no shell quoting or `head -c` truncation to manage. Two things below
+have no MCP equivalent at all and stay `gh`/`git`-only regardless, flagged inline where they come up:
+a single file's commit history, and finding which issue(s) a PR closes.
+
 **Commits first, always** — read the commit history of every source file you read in Steps 1a-1b. This
 is a research source in its own right, not a footnote: source states what the subject IS today, tests
 state how it composes, and history is the only place that states everything else — a squash-merge
@@ -148,15 +154,8 @@ newest commits and keeping the oldest:
 git log --follow -n 5 --date=short --format='%h %ad %an%n%s%n%b%n---' -- <path> | head -c 6000
 ```
 
-No GitHub MCP tool walks a single file's commit history the way `--follow` does — this step stays
-local `git log` regardless of what else is available.
-
 **Follow the thread from the commit, not from a keyword search.** A squash-merge subject ends in
-`(#N)` — that is the PR. Read it, then any issue it closes.
-
-**Prefer a connected GitHub MCP server over `gh` when one is available** (tool names like
-`pull_request_read`/`issue_read`, under whatever `mcp__<server>__` prefix this session uses) — it
-returns structured JSON directly, with no shell quoting or `head -c` truncation to manage:
+`(#N)` — that is the PR. Read it, then any issue it closes:
 
 ```
 pull_request_read(method: "get", owner: <owner>, repo: <repo>, pullNumber: <N>)
@@ -165,33 +164,28 @@ issue_read(method: "get", owner: <owner>, repo: <repo>, issue_number: <n>)
 issue_read(method: "get_comments", owner: <owner>, repo: <repo>, issue_number: <n>)
 ```
 
-One gap: no MCP tool exposes "which issue(s) does this PR close" — `gh`'s `closingIssuesReferences`
-field has no MCP equivalent. When you need that link, `gh` is still the only source:
-
-```bash
-gh pr view <N> --json closingIssuesReferences | head -c 2000
-```
-
-Without a connected GitHub MCP server, use `gh` for the PR/issue reads themselves too:
-
 ```bash
 gh pr view <N> --json title,body,state,closingIssuesReferences,comments | head -c 6000
 gh issue view <N> --json title,body,state,comments | head -c 6000
 ```
 
-This is sharper than a broad search either way: it reads exactly the PR that produced the code
-you're researching, not whatever a keyword happens to match. Fall back to a broad search only when a
-repo lands PRs as merge commits, so `--follow` has simplified away the `(#N)` and file history
-carries no PR reference at all. An MCP `search_issues` tool is worth preferring here too — it matches
-on natural-language meaning, not just keywords:
+"Which issue(s) does this PR close" has no MCP equivalent — `gh`'s `closingIssuesReferences` field is
+the only source for that link:
+
+```bash
+gh pr view <N> --json closingIssuesReferences | head -c 2000
+```
+
+This is sharper than a broad search: it reads exactly the PR that produced the code you're
+researching, not whatever a keyword happens to match. Fall back to a broad search only when a repo
+lands PRs as merge commits, so `--follow` has simplified away the `(#N)` and file history carries no PR
+reference at all:
 
 ```
 search_issues(query: "<topic, described in plain words>", owner: <owner>, repo: <repo>)
 search_commits(query: "repo:<owner>/<repo> <topic>")
 search_pull_requests(query: "repo:<owner>/<repo> <topic>")
 ```
-
-or, without MCP:
 
 ```bash
 gh search commits --repo <owner>/<repo> "<topic>" --limit 30
@@ -200,9 +194,9 @@ gh search prs     --repo <owner>/<repo> "<topic>" --limit 30
 ```
 
 For high-value issues/PRs, read full discussion via `issue_read(method: "get_comments", ...)` /
-`pull_request_read(method: "get_comments", ...)` — or, without MCP, `gh issue view <n> --comments` /
-`gh pr view <n> --comments`. For high-value commits, `gh api repos/<owner>/<repo>/commits/<sha>` —
-no MCP tool returns one commit's full diff plus message by SHA outside of a search result.
+`pull_request_read(method: "get_comments", ...)`, or `gh issue view <n> --comments` / `gh pr view <n>
+--comments`. For high-value commits, `gh api repos/<owner>/<repo>/commits/<sha>` — no MCP tool returns
+one commit's full diff plus message by SHA outside of a search result.
 
 **Every finding carries its source.** Record the provenance you actually read it from — `commit
 <shortSha>` / `PR #<n>` / `issue #<n>` — and a verbatim quote from it. A finding with no provenance or
