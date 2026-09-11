@@ -3,6 +3,7 @@ name: docs-research
 description: Shared research procedure for documentation agents and skills — find source, tests, examples, patterns, and GitHub history when researching a ZIO topic. Mounted by the docs-researcher agent and loaded directly by the docs-add-missing-section skill.
 allowed-tools: Read, Glob, Grep, Bash(gh:*)
 ---
+
 # Source Code Research for Documentation
 
 Use this procedure when researching a topic to understand the complete landscape of types, methods, patterns, and integrations before writing documentation.

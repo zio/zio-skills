@@ -40,7 +40,7 @@ briefly forked into a differently-named, un-cross-referenced copy) and cost a de
    flowrite's new content is wrong), does the output look structurally sane, and — the one case that
    still needs a human decision — does a *new* flowrite skill or subagent need a *new* manifest entry
    (the generator only emits what's already listed; it won't notice a new source file on its own).
-   Two cases are a standing exception, not because their flowrite counterpart might be wrong, but
+   Three cases are a standing exception, not because their flowrite counterpart might be wrong, but
    because there is no flowrite counterpart to promote from at all:
    - `docs-organize-types` vs. flowrite's `organize-reference-docs` (→ `docs-organize-reference-docs`)
      — differently scoped tools that coexist on purpose, not a fork to reconcile.
