@@ -42,7 +42,8 @@ test('labels match what archive-docs.sh greps for', () => {
   // The former standalone agents (redundancy, metadata, crossref, organize, add-section,
   // check-compliance, enrich-section, find-gaps, list-undocumented-prs, retrospect, document-pr,
   // pr-subsection) are gate-phase skills now, not their own labeled entry points, so they have no
-  // RUN_LABEL for this test to pin — they share the gate render's own (unlabeled) usage report.
+  // RUN_LABEL for this test to pin — they share the gate render's own usage report instead, logged
+  // under the fixed label `useRunBasics` falls back to (see composition.ts) whenever no kind is set.
 });
 
 test('each fixture launcher passes its own kind label to archive-docs.sh', () => {

@@ -237,7 +237,7 @@ export function useRoles(): void {
 
 /**
  * Shared composition for the writing branch of a docs writer: the role delegates, the guarded
- * phase tools, the kind's skills, the gh tool, the run reporter and the usage summary. Returns the
+ * phase tools, the kind's skills, the gh tool, and the run reporter. Returns the
  * instructions for the caller to return as its own.
  *
  * Model tier, sandbox and run context are NOT here — they belong to `useRunBasics`, which the agent
