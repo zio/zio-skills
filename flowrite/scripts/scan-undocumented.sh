@@ -65,6 +65,25 @@ fi
 
 DOCS_DIR="$ROOT/docs"
 REF_DIR="$DOCS_DIR/reference"
+GUIDES_DIR="$DOCS_DIR/guides"
+
+# Map of source directory -> sbt module name, e.g. "optics" -> "tinyproject-optics", read from
+# `lazy val x = (project in file("DIR")) .settings(..., name := "NAME")`. A module whose sbt
+# definition never overrides `name :=` (or has none at all) falls back to its directory, same as
+# before this map existed — this only replaces the directory label where a real one is declared.
+declare -A MODULE_NAMES
+if [[ -f "$ROOT/build.sbt" ]]; then
+  curdir=""
+  while IFS= read -r line; do
+    if echo "$line" | grep -qE 'project in file\("[^"]+"\)'; then
+      curdir=$(echo "$line" | sed -E 's/.*project in file\("([^"]+)"\).*/\1/')
+    fi
+    if [[ -n "$curdir" ]] && echo "$line" | grep -qE 'name[[:space:]]*:=[[:space:]]*"[^"]+"'; then
+      MODULE_NAMES["$curdir"]=$(echo "$line" | sed -E 's/.*name[[:space:]]*:=[[:space:]]*"([^"]+)".*/\1/')
+      curdir=""
+    fi
+  done < "$ROOT/build.sbt"
+fi
 
 # Temp files
 DOCS_WORDS_FILE=$(mktemp -t scan-words.XXXXXX)
@@ -93,10 +112,14 @@ find "$DOCS_DIR" -name '*.md' -type f -not -path "*${EXCLUDE_PATTERN}*" -print0 
   | grep -oE '\b[A-Z][A-Za-z0-9]+\b' \
   | sort | uniq -c | sort -rn > "$DOCS_WORDS_FILE"
 
-# Map of existing doc IDs (kebab-case filenames without .md)
+# Map of existing doc IDs (kebab-case filenames without .md). Guides get the same dedicated-page
+# recognition as reference pages — a type documented only by a guide (e.g. `docs/guides/lens.md` for
+# `Lens`) was previously invisible to Check 1 below, since only reference/top-level pages were in
+# ALL_DOC_IDS, and fell through to the much weaker mention-count heuristic instead.
 REF_IDS=$(find "$REF_DIR" -name '*.md' -type f 2>/dev/null | grep -v "$EXCLUDE_PATTERN" | while read -r f; do basename "$f" .md; done | sort)
+GUIDE_IDS=$(find "$GUIDES_DIR" -name '*.md' -type f 2>/dev/null | grep -v "$EXCLUDE_PATTERN" | while read -r f; do basename "$f" .md; done | sort)
 OTHER_IDS=$(find "$DOCS_DIR" -maxdepth 1 -name '*.md' -type f 2>/dev/null | grep -v "$EXCLUDE_PATTERN" | while read -r f; do basename "$f" .md; done | sort)
-ALL_DOC_IDS=$(printf '%s\n%s\n' "$REF_IDS" "$OTHER_IDS" | sort -u)
+ALL_DOC_IDS=$(printf '%s\n%s\n%s\n' "$REF_IDS" "$GUIDE_IDS" "$OTHER_IDS" | sort -u)
 
 # ─── 2. Extract public types from source code ────────────────────────────────
 
@@ -110,7 +133,8 @@ find "$ROOT" -name '*.scala' -regex '.*/src/main/scala[^/]*/.*' \
   | sort | while read -r file; do
 
   rel_path="${file#$ROOT/}"
-  module=$(echo "$rel_path" | cut -d/ -f1)
+  module_dir=$(echo "$rel_path" | cut -d/ -f1)
+  module="${MODULE_NAMES[$module_dir]:-$module_dir}"
   package=$(grep -m1 '^package ' "$file" 2>/dev/null | sed 's/^package //' | tr -d '\r' || echo "unknown")
 
   # Extract type declarations, skip private/protected
