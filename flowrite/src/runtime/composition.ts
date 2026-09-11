@@ -113,8 +113,21 @@ export type RunFacts = v.InferOutput<v.ObjectSchema<typeof docsWriterFields, und
  * the point: `useSandbox` presence is re-read at every turn boundary, so a render that skipped it
  * would detach and re-attach the environment and make the runtime re-announce the whole workspace.
  * A render with no `useModel` at all cannot start.
+ *
+ * `usageLabel` is what makes the cost report fire for EVERY run, not just a classified one:
+ * `useUsageReport` used to live only in `useDocsWriter`, which a gate-phase skill (enrich-section,
+ * check-compliance, an unclassified maintenance request) never reaches — it returns `GATE_INSTRUCTIONS`
+ * before `useDocsWriter` is ever called, so those runs reported no cost figures at all. Calling it
+ * here instead, on every render regardless of branch, closes that gap; the label is still whatever
+ * the caller passes (a kind's own label once classified, a generic one before/without classification).
  */
-export function useRunBasics(schema: v.GenericSchema, request: string, kind: DocKind | null): RunFacts {
+export function useRunBasics(
+  schema: v.GenericSchema,
+  request: string,
+  kind: DocKind | null,
+  usageLabel: string,
+): RunFacts {
+  useUsageReport(usageLabel);
   const facts = v.parse(schema, useInitialData()) as RunFacts;
 
   // The checkout the writer reads and edits. local() binds it to this host with no isolation, so
@@ -131,17 +144,6 @@ export function useRunBasics(schema: v.GenericSchema, request: string, kind: Doc
 
   // Owns useModel, so nothing here may call it again — it throws on a second call in one render.
   useDocsAuthorBase();
-
-  // Every render reaches here — the classification gate, every gate-phase maintenance skill, and
-  // the writing branch alike — so this is the one place a usage report can be guaranteed regardless
-  // of which path a run takes. It used to live only in `useDocsWriter`, which the gate branch never
-  // reaches (it returns `GATE_INSTRUCTIONS` before ever calling that hook) — a run that classified no
-  // kind (every maintenance pass: enrich-section, check-compliance, add-missing-section, cross-linker,
-  // organize, redundancy, backfill-metadata, find-gaps, document-pr…) printed no token/cost figures at
-  // all. `kind` stays the same value for a whole conversation once set (or stays null for the whole
-  // conversation when a run never classifies one), so the label is stable across a run's renders
-  // either way.
-  useUsageReport(kind ?? 'flowrite-gate');
 
   // cwd belongs to local(), not to useSandbox. local()'s cwd anchors the sandbox on the host and
   // defaults to process.cwd(); useSandbox's cwd only picks a directory *inside* an already-anchored
@@ -278,8 +280,8 @@ export function useDocsWriter(
   // the run?". It was exempt originally, and a phase duly filed the run's verdict mid-review.
   useTool(guardRootOnly(createReportRunResultTool(opts.label)));
 
-  // The usage report itself is registered by `useRunBasics` (with this same label, once `kind` is
-  // set) so it also covers the gate branch that never reaches this function — see the comment there.
+  // Cost reporting is registered once, in useRunBasics — every render reaches it, this branch or
+  // not, so it is not repeated here.
   useInstruction(`${opts.runDirective} ${SHARED_DIRECTIVE}`);
 
   // The skip list, in prose, because most phases are prose. See `skippedPhases()`: only the two

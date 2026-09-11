@@ -453,7 +453,7 @@ export function DocsWriter() {
   // Setup both branches need: run context, model tier, sandbox. Called in BOTH renders with
   // identical values, because `useSandbox` presence is re-read at every turn boundary — a render
   // that skipped it would detach and re-attach the environment and re-announce the workspace.
-  const facts = useRunBasics(initialData, request, kind);
+  const facts = useRunBasics(initialData, request, kind, kind === null ? 'flowrite-maintenance' : KINDS[kind].label);
 
   if (kind === null || subject === null) {
     // Every gate-phase skill flowrite has, activated by the model rather than always in the prompt.
