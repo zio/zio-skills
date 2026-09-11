@@ -12,6 +12,11 @@ tracing supporting types, finding real-world patterns, and researching GitHub hi
 finding-vs-not-a-finding table and grounding rules (verbatim signatures, audience tier, citation
 format). Follow that procedure here; nothing about it changes for this task.
 
+The skill's own language about internal notes, skipping a formal report, or writing scratch files
+under `.claude-research/` describes how `docs-add-missing-section` uses it inline, in its own
+conversation — it does not apply here. This task's output contract is the one stated above: write
+your findings to the task-named path, and that file is your only deliverable.
+
 Write the findings as markdown in the shape the task requests, grounded verbatim in what you
 found in source, tests, examples, and history. Never let general Scala/ZIO knowledge substitute for a
 real fact you can read from the checkout — quote the real imports, signatures, and examples.

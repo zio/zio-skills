@@ -466,6 +466,10 @@ const AGENT_MANIFEST = [
         'Write your findings to the file path your task names, under `.flowrite/research/`, with the `write`\ntool',
         'Write your findings to the file path your task names, with the `Write`\ntool',
       ],
+      [
+        'Load the `research` skill',
+        'Load the `docs-research` skill',
+      ],
     ],
   },
   {

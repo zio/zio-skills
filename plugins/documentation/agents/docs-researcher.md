@@ -17,10 +17,15 @@ findings file is the only file you write.
 If a findings file already exists at that path and covers the same subject, read it and say so instead
 of researching again. It is the cache; a second run against an unchanged checkout should not pay twice.
 
-Load the `research` skill for the step-by-step procedure — locating core source, reading tests,
+Load the `docs-research` skill for the step-by-step procedure — locating core source, reading tests,
 tracing supporting types, finding real-world patterns, and researching GitHub history — along with its
 finding-vs-not-a-finding table and grounding rules (verbatim signatures, audience tier, citation
 format). Follow that procedure here; nothing about it changes for this task.
+
+The skill's own language about internal notes, skipping a formal report, or writing scratch files
+under `.claude-research/` describes how `docs-add-missing-section` uses it inline, in its own
+conversation — it does not apply here. This task's output contract is the one stated above: write
+your findings to the task-named path, and that file is your only deliverable.
 
 Write the findings as markdown in the shape the task requests, grounded verbatim in what you
 found in source, tests, examples, and history. Never let general Scala/ZIO knowledge substitute for a

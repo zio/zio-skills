@@ -1,6 +1,6 @@
 ---
 name: research
-description: Shared research procedure for documentation agents and skills — find source, tests, examples, patterns, and GitHub history when researching a ZIO topic. Mounted by the researcher subagent (docs-researcher in the Claude Code plugin) and loaded directly by the docs-add-missing-section skill.
+description: Shared research procedure for documentation agents and skills — find source, tests, examples, patterns, and GitHub history when researching a ZIO topic. Mounted by the researcher subagent (docs-researcher in the Claude Code plugin); its plugin counterpart, docs-research, is also loaded directly by the plugin-only docs-add-missing-section skill, which has no flowrite equivalent.
 ---
 
 # Source Code Research for Documentation
@@ -93,6 +93,9 @@ Build internal research notes (core types, public API, usage patterns, dependenc
 
 ## Research Workflow
 
+Work through Steps 1a-2 in order; skip a step only if it errors, never because it looks unnecessary
+for this particular topic.
+
 ### Step 1a: Read Core Source Files
 
 For each core type, read the full source file to understand:
@@ -110,12 +113,18 @@ Search and read test suites to understand:
 - Error handling and exception cases
 - Integration with other types
 
+Tests are the authority for how types COMPOSE — source and scaladoc remain the authority for
+signatures, but derive the collaboration workflow and any end-to-end usage from a real multi-type
+test scenario, and cite that test as the source for it.
+
 ### Step 1c: Find Supporting Types
 
 Identify every type that core methods depend on:
 1. Grep imports in test files for the full dependency graph
 2. For each supporting type, read enough source and documentation to explain it in context
 3. Trace return types through multiple layers if needed
+4. Note which instances are derived (e.g. via a type class macro) vs. manually written — this is a
+   distinguishing fact about the dependency, not an incidental detail
 
 ### Step 1d: Search for Real-World Patterns
 
@@ -160,6 +169,10 @@ gh search prs     --repo <owner>/<repo> "<topic>" --limit 30
 For high-value issues, read full discussion: `gh issue view <n> --comments`
 For high-value PRs, read full review discussion: `gh pr view <n> --comments`
 For high-value commits, review the commit message and changed files: `gh api repos/<owner>/<repo>/commits/<sha>`
+
+**Every finding carries its source.** Record the provenance you actually read it from — `commit
+<shortSha>` / `PR #<n>` / `issue #<n>` — and a verbatim quote from it. A finding with no provenance or
+no quote is not usable; an author cannot verify or cite it.
 
 **What counts as a finding.** Test: could a documentation author learn this from source or tests
 alone? If not, it is a finding — design reasons are one kind among several:

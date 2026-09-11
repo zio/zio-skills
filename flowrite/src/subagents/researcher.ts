@@ -10,7 +10,7 @@ import instructions from './researcher.md';
  * read-only over the library checkout in the parent's sandbox (glob/grep/read
  * via built-in shell), plus `gh_query` for GitHub history. The calling phase tool
  * supplies the kind-specific focus and result schema, so this role itself stays
- * document-kind-neutral. It does not write files.
+ * document-kind-neutral.
  *
  * Mounts the shared `research` skill for the step-by-step procedure, the finding-vs-not-a-finding
  * table, and the grounding rules — the same skill the plugin's `docs-add-missing-section` loads
