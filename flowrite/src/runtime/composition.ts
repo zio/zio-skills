@@ -113,8 +113,21 @@ export type RunFacts = v.InferOutput<v.ObjectSchema<typeof docsWriterFields, und
  * the point: `useSandbox` presence is re-read at every turn boundary, so a render that skipped it
  * would detach and re-attach the environment and make the runtime re-announce the whole workspace.
  * A render with no `useModel` at all cannot start.
+ *
+ * `usageLabel` is what makes the cost report fire for EVERY run, not just a classified one:
+ * `useUsageReport` used to live only in `useDocsWriter`, which a gate-phase skill (enrich-section,
+ * check-compliance, an unclassified maintenance request) never reaches — it returns `GATE_INSTRUCTIONS`
+ * before `useDocsWriter` is ever called, so those runs reported no cost figures at all. Calling it
+ * here instead, on every render regardless of branch, closes that gap; the label is still whatever
+ * the caller passes (a kind's own label once classified, a generic one before/without classification).
  */
-export function useRunBasics(schema: v.GenericSchema, request: string, kind: DocKind | null): RunFacts {
+export function useRunBasics(
+  schema: v.GenericSchema,
+  request: string,
+  kind: DocKind | null,
+  usageLabel: string,
+): RunFacts {
+  useUsageReport(usageLabel);
   const facts = v.parse(schema, useInitialData()) as RunFacts;
 
   // The checkout the writer reads and edits. local() binds it to this host with no isolation, so
@@ -267,7 +280,8 @@ export function useDocsWriter(
   // the run?". It was exempt originally, and a phase duly filed the run's verdict mid-review.
   useTool(guardRootOnly(createReportRunResultTool(opts.label)));
 
-  useUsageReport(opts.label);
+  // Cost reporting is registered once, in useRunBasics — every render reaches it, this branch or
+  // not, so it is not repeated here.
   useInstruction(`${opts.runDirective} ${SHARED_DIRECTIVE}`);
 
   // The skip list, in prose, because most phases are prose. See `skippedPhases()`: only the two
