@@ -40,10 +40,8 @@ tags: [zio, scala, knowledge, reference, documentation, ecosystem]
 ## Response Workflow
 
 1. **Identify the topic** — effects? fibers? concurrency? streams? testing? dependency injection? error handling? one of the ecosystem libraries?
-2. **Prefer MCP** — if `search_docs`/`get_doc_page`/`get_doc_index` are available, use them (see Question Routing). Otherwise fetch the sitemap at `https://zio.dev/llms.txt` and scan for the relevant section(s).
-3. **Navigate to the specific page(s)** — do not answer from memory. Via MCP: `get_doc_page(path)`. Via sitemap fallback: fetch the `.md` URL directly, falling back to the HTML page only if the `.md` fetch fails.
-4. **Provide the answer** with the source URL (or doc path) so the user can read more.
-5. **If uncertain** — direct the user to the official docs: "For the most current information, see https://zio.dev"
+2. **Route, fetch, and answer** — do not answer from memory. Follow Question Routing above (MCP tools first, sitemap fallback, applying Core Principle 5 for the `.md`-first rule), then cite the source per Core Principle 3.
+3. **If uncertain** — direct the user to the official docs: "For the most current information, see https://zio.dev"
 
 ---
 
@@ -75,7 +73,7 @@ tags: [zio, scala, knowledge, reference, documentation, ecosystem]
 
 **`get_doc_page` fails for a returned path** — retry once verbatim, else fall back to sitemap.
 
-**MCP unavailable** — fall back to sitemap workflow below.
+**MCP unavailable** — fall back to sitemap workflow above.
 
 **`WebFetch` returns 404 for a `zio.dev/...` URL**
 
