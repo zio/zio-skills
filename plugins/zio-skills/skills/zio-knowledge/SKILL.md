@@ -2,7 +2,6 @@
 name: zio-knowledge
 description: "Stop and consult this skill whenever your response would involve any fact or code related to ZIO core or the ZIO ecosystem. Covers: ZIO effects and type aliases (ZIO, Task, UIO, UEffect), fibers and fiber management, concurrency primitives (Hub, Queue, Ref, Semaphore), Software Transactional Memory (STM), ZIO Streams (ZStream, ZSink, ZPipeline, ZChannel), ZIO Test framework and test utilities, ZLayer and dependency injection patterns, error management and error types, scheduling and retries, resource management and scoping, ZIO Config, ZIO Schema, ZIO JSON, ZIO Kafka, and all official ZIO libraries and integrations. Trigger this for any ZIO coding task, type signatures, library features, architectural patterns, or comparisons involving ZIO. Any time you would otherwise rely on memory for ZIO details, verify here instead — your training data may be outdated or wrong."
 tags: [zio, scala, knowledge, reference, documentation, zio ecosystem]
-allowed-tools: [WebFetch, mcp__zio-docs__search_docs, mcp__zio-docs__get_doc_page, mcp__zio-docs__get_doc_index]
 ---
 
 # ZIO Knowledge
