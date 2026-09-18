@@ -9,10 +9,10 @@ tags: [zio, scala, knowledge, reference, documentation, ecosystem]
 ## Core Principles
 
 1. **Accuracy over memory** — Do not rely on training data for ZIO specifics. Fetch the relevant documentation page before answering.
-2. **LLM sitemap first** — Start at `https://zio.dev/llms.txt` to discover the current documentation structure and pick the right page for your specific question.
-3. **Source everything** — Include the documentation URL in your response so the user can verify and learn more.
-4. **Right resource first** — Navigate from the sitemap to the specific reference page rather than answering from the generic overview.
-5. **Prefer Markdown pages** — Always fetch the `.md` version of a documentation URL first. Fall back to the regular HTML website page only if the `.md` fetch fails or returns an error.
+2. **MCP tools first, sitemap fallback** — If the `zio-docs` MCP server is connected, use mcp tools instead of `WebFetch`. Otherwise start at `https://zio.dev/llms.txt` to discover the current documentation structure and pick the right page for your specific question.
+3. **Source everything** — Include the documentation URL (or doc `path`, when using the MCP tools) in your response so the user can verify and learn more.
+4. **Right resource first** — Navigate to the specific reference page rather than answering from the generic overview.
+5. **Prefer Markdown pages** — When falling back to `WebFetch`, always fetch the `.md` version of a documentation URL first. Fall back to the regular HTML website page only if the `.md` fetch fails or returns an error.
 
 ---
 
@@ -20,33 +20,39 @@ tags: [zio, scala, knowledge, reference, documentation, ecosystem]
 
 ### Any ZIO question?
 
-→ Start at the LLM sitemap, then navigate to the relevant page:
+→ Check whether the `zio-docs` MCP server (`mcp.zio.dev/mcp`) is connected:
 
-- **ZIO LLM Sitemap:** https://zio.dev/llms.txt
+- **MCP available:** Call `search_docs` with the question first. Each result has a `path` (verified against the local index) or a `source_url` (external, fetch directly). Fetch the full page with `get_doc_page(path)`. Use `get_doc_index` to browse all indexed pages when you need to discover paths rather than search by topic.
+- **MCP unavailable:** Fall back to the LLM sitemap:
 
-The sitemap follows the [llmstxt.org](https://llmstxt.org) standard and lists every documentation page with its URL and a one-line description. Read it to identify the most relevant page(s) for your question, then fetch those pages for API details, types, and method signatures. The URLs end with .md, which means they are Markdown files, and you can read their raw content.
+  - **ZIO LLM Sitemap:** https://zio.dev/llms.txt
 
-If you need to reduce API calls or want to index the full documentation locally for the session, download the complete content in one request:
+  The sitemap follows the [llmstxt.org](https://llmstxt.org) standard and lists every documentation page with its URL and a one-line description. Read it to identify the most relevant page(s) for your question, then fetch those pages for API details, types, and method signatures. The URLs end with .md, which means they are Markdown files, and you can read their raw content.
 
-- **Full Documentation (single file):** https://zio.dev/llms-full.txt
+  If you need to reduce API calls or want to index the full documentation locally for the session, download the complete content in one request:
 
-This file contains the concatenated content of every documentation page — useful for answering multiple questions across sections or indexing the full documentation locally.
+  - **Full Documentation (single file):** https://zio.dev/llms-full.txt
+
+  This file contains the concatenated content of every documentation page — useful for answering multiple questions across sections or indexing the full documentation locally.
 
 ---
 
 ## Response Workflow
 
 1. **Identify the topic** — effects? fibers? concurrency? streams? testing? dependency injection? error handling? one of the ecosystem libraries?
-2. **Fetch the sitemap** at `https://zio.dev/llms.txt` and scan for the relevant section(s).
-3. **Navigate to the specific page(s)** listed in the sitemap — do not answer from memory. Fetch the `.md` URL directly; fall back to the HTML page only if the `.md` fetch fails.
-4. **Provide the answer** with the source URL so the user can read more.
+2. **Prefer MCP** — if `search_docs`/`get_doc_page`/`get_doc_index` are available, use them (see Question Routing). Otherwise fetch the sitemap at `https://zio.dev/llms.txt` and scan for the relevant section(s).
+3. **Navigate to the specific page(s)** — do not answer from memory. Via MCP: `get_doc_page(path)`. Via sitemap fallback: fetch the `.md` URL directly, falling back to the HTML page only if the `.md` fetch fails.
+4. **Provide the answer** with the source URL (or doc path) so the user can read more.
 5. **If uncertain** — direct the user to the official docs: "For the most current information, see https://zio.dev"
 
 ---
 
 ## Quick Reference
 
-**LLM Sitemap (start here for any ZIO question):**
+**MCP Server (prefer this when connected):**
+- https://mcp.zio.dev/mcp
+
+**LLM Sitemap (fallback, if MCP is not connected):**
 - https://zio.dev/llms.txt
 
 **Official Documentation:**
@@ -64,6 +70,12 @@ This file contains the concatenated content of every documentation page — usef
 ---
 
 ## Common Failures
+
+**`search_docs` returns `source_url` not `path`** — fetch `source_url` directly, don't call `get_doc_page`.
+
+**`get_doc_page` fails for a returned path** — retry once verbatim, else fall back to sitemap.
+
+**MCP unavailable** — fall back to sitemap workflow below.
 
 **`WebFetch` returns 404 for a `zio.dev/...` URL**
 
