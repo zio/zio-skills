@@ -1,0 +1,46 @@
+name: Release - prepare
+
+# Run from the Actions tab. Bumps every version file and opens a release PR.
+# Merging that PR triggers release-publish.yml.
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Release version, X.Y.Z (no leading v)"
+        required: true
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Validate version
+        run: |
+          [[ "${{ inputs.version }}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo "Version must be X.Y.Z"; exit 1; }
+          if git ls-remote --exit-code --tags origin "refs/tags/v${{ inputs.version }}" >/dev/null; then
+            echo "Tag v${{ inputs.version }} already exists"; exit 1
+          fi
+
+      - name: Bump versions
+        run: scripts/bump-version.sh "${{ inputs.version }}"
+
+      - name: Open release PR
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          branch="release-${{ inputs.version }}"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -b "$branch"
+          git commit -am "chore: release ${{ inputs.version }}"
+          git push origin "$branch"
+          gh pr create --base main --head "$branch" \
+            --title "chore: release ${{ inputs.version }}" \
+            --body "Bumps plugins, marketplace, gemini extension and package.json to ${{ inputs.version }}. Merging tags \`v${{ inputs.version }}\` and \`flowrite-v${{ inputs.version }}\` and publishes draft releases."

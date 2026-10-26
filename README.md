@@ -205,3 +205,9 @@ Skills are curated learning resources. See [CLAUDE.md](CLAUDE.md) for contributi
 ## License
 
 [License](LICENSE)
+
+## Releasing
+
+1. Actions → **Release - prepare** → Run workflow, enter `X.Y.Z`. It bumps every version file (`scripts/bump-version.sh`) and opens a `release-X.Y.Z` PR.
+2. Review and merge the PR. **Release - publish** then creates draft releases `vX.Y.Z` (plugins) and `flowrite-vX.Y.Z` with auto-generated notes.
+3. Edit the draft notes if you want, then publish. Publishing creates the tag.
