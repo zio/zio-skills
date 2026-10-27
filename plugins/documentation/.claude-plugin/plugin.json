@@ -1,7 +1,7 @@
 {
   "name": "documentation",
   "description": "Coding agent skills for writing high-quality documentation for ZIO libraries: reference pages, how-to guides, tutorials, mdoc conventions, and writing-style enforcement.",
-  "version": "0.1.0-fbe60ed7",
+  "version": "0.2.0",
   "author": {
     "name": "Milad Khajavi"
   },

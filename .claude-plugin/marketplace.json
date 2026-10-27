@@ -8,7 +8,7 @@
     {
       "name": "zio-skills",
       "description": "Coding agent skills for building applications with ZIO and ZIO HTTP. Start here for server scaffolding, OpenAPI code generation, endpoint API patterns, and more.",
-      "version": "0.1.0",
+      "version": "0.2.0",
       "source": "./plugins/zio-skills",
       "author": {
         "name": "zio"
@@ -17,7 +17,7 @@
     {
       "name": "documentation",
       "description": "Coding agent skills for writing high-quality documentation for ZIO libraries: reference pages, how-to guides, tutorials, mdoc conventions, and writing-style enforcement.",
-      "version": "0.1.0",
+      "version": "0.2.0",
       "source": "./plugins/documentation",
       "author": {
         "name": "zio"

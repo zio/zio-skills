@@ -1,6 +1,6 @@
 {
   "name": "zio-skills",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Coding agent skills for building applications with ZIO and ZIO HTTP",
   "type": "module",
   "main": ".opencode/plugins/zio-skills.js",
