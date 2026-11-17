@@ -40,11 +40,8 @@ tags: [logo, branding, brand-sheet, design, identity, favicon]
 
 1. **Round 1:** 6–12 sketches, grouped by idea, numbered for picking. Show each one on its tile, bare in ink, at 32 and 16 px, and in the lockup. Give each a one-line story and an honest weakness.
 2. **Iterate:** the user picks favourites; each later round refines them with one change per variant. Record decisions (tile, typeface, accent) as their own comparison boards.
-3. **Lock the logo,** then build the brand sheet.
-
-## Brand sheet sections
-
-0 Overview · 1 Logo (construction, clear space, minimum size, misuse) · 2 Icon and favicon · 3 Colour (values, contrast, usage) · 4 Typography · 5 Voice and tone (tagline as a proposal) · 6 Imagery style · 7 Hero banner · 8 Social cards · 9 In the browser (docs header, tab, GitHub) · 10 Assets and tokens (files, sizes, colour/type tokens).
+3. **Lock the logo,** then build the brand sheet from [resources/brand-sheet-template.md](resources/brand-sheet-template.md): 11 sections, 0 Overview to 10 Assets and tokens, each with numbered subsections.
+4. **Export and deliver** once the sheet is approved, following [resources/export-and-delivery.md](resources/export-and-delivery.md): build the files into a flat `brand/` folder at the repo root, wire them into the docs site and README, and open a PR.
 
 ## Rules
 
