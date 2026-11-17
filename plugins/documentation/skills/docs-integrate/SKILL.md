@@ -23,19 +23,25 @@ sections in this order, top to bottom:
    "Introduction" through its `sidebar_label`. It is never the parent category of the other sections:
    Getting Started, Reference and the rest are its siblings.
 2. **Getting Started**: `getting-started`, the first item.
-3. **Reference**: always directly after Getting Started; nothing goes between them. Holds every
-   feature or topic page and every API reference page. With more than about 8 pages, nest them in
-   categories by topic, each topic page next to its API reference page.
-4. **Integrations** (optional): pages that connect the library to other libraries or systems
+3. **Concepts** (optional): explanation pages, the "why" (design, trade-offs, differences between
+   versions, performance, security), with an `explanation/index` landing page as the category's
+   `link`. If the section exists, it comes directly after Getting Started; explanation pages never sit
+   inside Reference.
+4. **Reference**: directly after Concepts, or after Getting Started when there is no Concepts
+   section. Holds every feature or topic page and every API reference page, and only reference
+   material: worked recipes belong in How-to Guides and rationale in Concepts. With more than about
+   8 pages, nest them in categories by topic, each topic page next to its API reference page.
+5. **Integrations** (optional): pages that connect the library to other libraries or systems
    (backends, bridges, framework modules). If the section exists, it is its own category placed
    before Tutorials and How-to Guides, never nested inside Reference.
-5. **Tutorials**: always directly before How-to Guides.
-6. **How-to Guides**.
+6. **Tutorials**: always directly before How-to Guides.
+7. **How-to Guides**.
 
 No other top-level sections: topic groups belong inside Reference.
 
 Place the new page by its type:
 
+- **Explanation pages**: under `"Concepts"`.
 - **Reference pages**: under `"Reference"`, inside the topic category that fits if Reference is
   nested, in logical order.
 - **Integration pages**: under `"Integrations"`.
@@ -108,8 +114,9 @@ If `node` reports a syntax error (e.g., unmatched brace, trailing comma without 
 Add a link to the new page under the appropriate section in `docs/index.md`:
 
 - Reference pages go under the "Reference Documentation" heading.
-- Integration pages, tutorials and how-to guides go under "Integrations", "Tutorials" and "How-to
-  Guides" headings, in the sidebar order from Step 1 (create a heading if missing).
+- Explanation pages, integration pages, tutorials and how-to guides go under "Concepts",
+  "Integrations", "Tutorials" and "How-to Guides" headings, in the sidebar order from Step 1 (create a
+  heading if missing).
 
 ### The published artifacts table
 
