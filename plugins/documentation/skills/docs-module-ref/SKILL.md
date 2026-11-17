@@ -172,7 +172,9 @@ cite a PR number on the page. No qualifying finding means no Motivation section 
 libraryDependencies += "dev.zio" %% "<module-name>" % "@VERSION@"
 ```
 
-For Scala.js: use `%%%` instead of `%%`. Supported Scala versions: 2.13.x and 3.x.
+For Scala.js/Native, if cross-built: `%%%` not `%%`. Scala versions ← build (`crossScalaVersions`), no fixed list. >1 artifact → one
+`libraryDependencies ++= Seq(...)` block, `//` comment above each line = purpose + platforms, never a
+table. Full artifact list only in `index.md#modules` (`docs-integrate`, "The published artifacts list").
 
 #### 4. Overview (hierarchical) / optional for flat
 

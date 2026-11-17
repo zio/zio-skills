@@ -167,13 +167,15 @@ Only include this for top-level module types (e.g., `Chunk`, `Context`, `TypeId`
 libraryDependencies += "dev.zio" %% "<library-name>" % "@VERSION@"
 ```
 
-For cross-platform (Scala.js):
+For cross-platform (Scala.js, Scala Native):
 
 ```scala
 libraryDependencies += "dev.zio" %%% "<library-name>" % "@VERSION@"
 ```
 
-Note supported Scala versions: 2.13.x and 3.x.
+Scala versions ← build (`crossScalaVersions`), no fixed list. >1 artifact → one
+`libraryDependencies ++= Seq(...)` block, `//` comment above each line = purpose + platforms, never a
+table. Full artifact list only in `index.md#modules` (`docs-integrate`, "The published artifacts list").
 
 #### 5. Creating Values (required)
 

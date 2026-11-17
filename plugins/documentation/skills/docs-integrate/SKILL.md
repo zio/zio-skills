@@ -118,27 +118,36 @@ Add a link to the new page under the appropriate section in `docs/index.md`:
   "Integrations", "Tutorials" and "How-to Guides" headings, in the sidebar order from Step 1 (create a
   heading if missing).
 
-### The published artifacts table
+### The published artifacts list
 
-`docs/index.md` must list every artifact the build publishes, in one table under a `## Modules`
-heading. `docs/index.md` also generates `README.md` (`sbt docs/generateReadme`), so this table is what
-GitHub and Maven Central visitors see. When the new page documents a module that publishes its own
-artifact (a YAML module, a golden-testing module, an interop module, a macros module), add or update
-its row:
+`docs/index.md` → `## Modules`: every published artifact as copy-pastable `libraryDependencies`
+blocks, NEVER a table (Milad, 2026-11-17). `index.md` → `README.md` (`sbt docs/generateReadme`) →
+GitHub/Maven visitors see it; reader copies block into `build.sbt`, deletes unneeded lines. New page
+documents module w/ own artifact (YAML, golden testing, interop, macros) → add/update its line:
 
-| Artifact          | What it is for           | Platforms             | Scala versions | Documentation                  |
-|-------------------|--------------------------|-----------------------|----------------|--------------------------------|
-| `zio-json-yaml`   | Read and write YAML ...  | JVM                   | 2.12, 2.13, 3  | [YAML](reference/yaml.md)      |
+```scala
+libraryDependencies ++= Seq(
+  // JSON codecs derived at compile time (JVM, Scala.js, Native)
+  "dev.zio" %% "zio-json"      % "@VERSION@",
+  // Read and write YAML (JVM only)
+  "dev.zio" %% "zio-json-yaml" % "@VERSION@"
+)
+```
 
-- **Source of truth is the build.** A published artifact is every sbt project without
-  `publish / skip := true`. Take platforms from `crossProject(JVMPlatform, JSPlatform, NativePlatform)`
-  (a plain `project` is JVM only) and Scala versions from `crossScalaVersions` (watch for
-  `crossScalaVersions -= Scala3`). When in doubt, check Maven Central for the `_3`, `_sjs1_` and
-  `_native0.5_` artifacts of the last release.
-- **One copy only.** Getting Started, the Reference index and the Integrations index link to
-  `index.md#modules`; they never repeat the table, because two copies drift apart.
-- Below the table, show one install line per kind of module: `%%%` for a cross-built module in a
-  Scala.js or Scala Native project, `% Test` for a test-only module.
+- **No fact lost vs table.** 1 line/artifact; `//` comment above = purpose + platforms. Scala
+  versions: once, sentence before blocks; module differs (`crossScalaVersions -= Scala3`) → its
+  comment. Docs links: bullet list after blocks, 1 per module w/ own page. Artifact users never add
+  (internal macros) → 1 sentence, no line.
+- **1 block/platform kind.** `%%` block = every module (JVM). `%%%` block = cross-built only
+  (Scala.js/Native); comments drop platform tags; sentence before names modules w/o JS/Native
+  artifacts. Test-only module → `% Test`.
+- Align `%` cols; `@VERSION@`; plain ```` ```scala ```` (sbt settings ≠ mdoc).
+- **Source of truth = build.** Published = sbt project w/o `publish / skip := true`. Platforms ←
+  `crossProject(JVMPlatform, JSPlatform, NativePlatform)` (plain `project` = JVM only). Scala
+  versions ← `crossScalaVersions` (watch `-= Scala3`). Doubt → Maven Central `_3`, `_sjs1_`,
+  `_native0.5_` artifacts of last release.
+- **1 copy only.** Getting Started, Reference index, Integrations index → link `index.md#modules`,
+  never repeat (copies drift).
 
 ## Step 3: Cross-Reference Related Pages
 
