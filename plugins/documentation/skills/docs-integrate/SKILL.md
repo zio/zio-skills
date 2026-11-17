@@ -19,21 +19,29 @@ discards your change.
 Add the page's `id` to the sidebar in the git-tracked file. Every ZIO project's sidebar keeps its
 sections in this order, top to bottom:
 
-1. **Introduction**: `index`, the top-level category's `link` (not repeated in `items`).
+1. **Introduction**: `index`, the plain first item of the top-level `sidebar` array, labelled
+   "Introduction" through its `sidebar_label`. It is never the parent category of the other sections:
+   Getting Started, Reference and the rest are its siblings.
 2. **Getting Started**: `getting-started`, the first item.
-3. **Reference**: always directly after Getting Started; nothing goes between them. Holds every
-   feature or topic page and every API reference page. With more than about 8 pages, nest them in
-   categories by topic, each topic page next to its API reference page.
-4. **Integrations** (optional): pages that connect the library to other libraries or systems
+3. **Concepts** (optional): explanation pages, the "why" (design, trade-offs, differences between
+   versions, performance, security), with an `explanation/index` landing page as the category's
+   `link`. If the section exists, it comes directly after Getting Started; explanation pages never sit
+   inside Reference.
+4. **Reference**: directly after Concepts, or after Getting Started when there is no Concepts
+   section. Holds every feature or topic page and every API reference page, and only reference
+   material: worked recipes belong in How-to Guides and rationale in Concepts. With more than about
+   8 pages, nest them in categories by topic, each topic page next to its API reference page.
+5. **Integrations** (optional): pages that connect the library to other libraries or systems
    (backends, bridges, framework modules). If the section exists, it is its own category placed
    before Tutorials and How-to Guides, never nested inside Reference.
-5. **Tutorials**: always directly before How-to Guides.
-6. **How-to Guides**.
+6. **Tutorials**: always directly before How-to Guides.
+7. **How-to Guides**.
 
 No other top-level sections: topic groups belong inside Reference.
 
 Place the new page by its type:
 
+- **Explanation pages**: under `"Concepts"`.
 - **Reference pages**: under `"Reference"`, inside the topic category that fits if Reference is
   nested, in logical order.
 - **Integration pages**: under `"Integrations"`.
@@ -106,8 +114,31 @@ If `node` reports a syntax error (e.g., unmatched brace, trailing comma without 
 Add a link to the new page under the appropriate section in `docs/index.md`:
 
 - Reference pages go under the "Reference Documentation" heading.
-- Integration pages, tutorials and how-to guides go under "Integrations", "Tutorials" and "How-to
-  Guides" headings, in the sidebar order from Step 1 (create a heading if missing).
+- Explanation pages, integration pages, tutorials and how-to guides go under "Concepts",
+  "Integrations", "Tutorials" and "How-to Guides" headings, in the sidebar order from Step 1 (create a
+  heading if missing).
+
+### The published artifacts table
+
+`docs/index.md` must list every artifact the build publishes, in one table under a `## Modules`
+heading. `docs/index.md` also generates `README.md` (`sbt docs/generateReadme`), so this table is what
+GitHub and Maven Central visitors see. When the new page documents a module that publishes its own
+artifact (a YAML module, a golden-testing module, an interop module, a macros module), add or update
+its row:
+
+| Artifact          | What it is for           | Platforms             | Scala versions | Documentation                  |
+|-------------------|--------------------------|-----------------------|----------------|--------------------------------|
+| `zio-json-yaml`   | Read and write YAML ...  | JVM                   | 2.12, 2.13, 3  | [YAML](reference/yaml.md)      |
+
+- **Source of truth is the build.** A published artifact is every sbt project without
+  `publish / skip := true`. Take platforms from `crossProject(JVMPlatform, JSPlatform, NativePlatform)`
+  (a plain `project` is JVM only) and Scala versions from `crossScalaVersions` (watch for
+  `crossScalaVersions -= Scala3`). When in doubt, check Maven Central for the `_3`, `_sjs1_` and
+  `_native0.5_` artifacts of the last release.
+- **One copy only.** Getting Started, the Reference index and the Integrations index link to
+  `index.md#modules`; they never repeat the table, because two copies drift apart.
+- Below the table, show one install line per kind of module: `%%%` for a cross-built module in a
+  Scala.js or Scala Native project, `% Test` for a test-only module.
 
 ## Step 3: Cross-Reference Related Pages
 
