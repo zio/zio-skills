@@ -71,6 +71,13 @@ Beyond type-level coverage, look for missing conceptual documentation:
 2. **Migration guides**: Any version migration docs needed?
 3. **How-to guides**: Common tasks that need step-by-step guides.
 4. **Architecture overview**: High-level design docs for contributors.
+5. **Published artifacts**: List every artifact the build publishes (every sbt project without
+   `publish / skip := true`, with its platforms from `crossProject(...)` and its Scala versions from
+   `crossScalaVersions`). Compare that list with the `## Modules` table in `docs/index.md`, the page
+   that also generates `README.md`. A missing table, a missing row, or a row whose platforms, Scala
+   versions or documentation link do not match the build is a **Critical** gap: readers on GitHub and
+   Maven Central cannot find out the module exists or where it runs. See `docs-integrate`, "The
+   published artifacts table", for the expected shape.
 
 Add these as a separate "Conceptual Gaps" section.
 
