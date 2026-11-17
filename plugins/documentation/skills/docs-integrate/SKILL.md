@@ -16,34 +16,77 @@ path is the one to edit (typically `docs/sidebars.js`). Never `website/docs/side
 mdoc's own output, gitignored, and an edit there ships nothing — the build regenerates it and silently
 discards your change.
 
-Add the page's `id` to the sidebar in the git-tracked file. Place it in the appropriate category:
+Add the page's `id` to the sidebar in the git-tracked file. Every ZIO project's sidebar keeps its
+sections in this order, top to bottom:
 
-- **Reference pages**: add under the `"Reference"` category, maintaining alphabetical or logical
-  order.
-- **How-to guides**: add under the `"Guides"` category. If the category does not yet exist, append a new category entry to the top-level `sidebars.docs` array (next to `"Reference"`).
+1. **Introduction**: `index`, the top-level category's `link` (not repeated in `items`).
+2. **Getting Started**: `getting-started`, the first item.
+3. **Reference**: always directly after Getting Started; nothing goes between them. Holds every
+   feature or topic page and every API reference page. With more than about 8 pages, nest them in
+   categories by topic, each topic page next to its API reference page.
+4. **Integrations** (optional): pages that connect the library to other libraries or systems
+   (backends, bridges, framework modules). If the section exists, it is its own category placed
+   before Tutorials and How-to Guides, never nested inside Reference.
+5. **Tutorials**: always directly before How-to Guides.
+6. **How-to Guides**.
 
-Example — a Guides category appended to an existing `sidebars.docs` array:
+No other top-level sections: topic groups belong inside Reference.
+
+Place the new page by its type:
+
+- **Reference pages**: under `"Reference"`, inside the topic category that fits if Reference is
+  nested, in logical order.
+- **Integration pages**: under `"Integrations"`.
+- **Tutorials**: under `"Tutorials"`.
+- **How-to guides**: under `"How-to Guides"`.
+
+If the category does not exist yet, create it at its position in the order above. A section with
+only one page is a plain doc item at that position, not a one-item category.
+
+Example — the full shape, with a new how-to guide added:
 
 ```javascript
 // docs/sidebars.js
 module.exports = {
-  docs: [
-    "index",
+  sidebar: [
     {
       type: "category",
-      label: "Reference",
+      label: "ZIO Example",
+      collapsed: false,
+      link: { type: "doc", id: "index" },
       items: [
-        "reference/chunk",
-        "reference/schema",
-        // ... existing reference pages
-      ],
-    },
-    // 👇 NEW category, added by this step
-    {
-      type: "category",
-      label: "Guides",
-      items: [
-        "guides/guide-id-here",
+        "getting-started",
+        {
+          type: "category",
+          label: "Reference",
+          collapsed: false,
+          items: [
+            "reference/chunk",
+            "reference/schema",
+            // ... existing reference pages
+          ],
+        },
+        {
+          type: "category",
+          label: "Integrations", // optional
+          collapsed: false,
+          items: ["slf4j"],
+        },
+        {
+          type: "category",
+          label: "Tutorials",
+          collapsed: false,
+          items: ["tutorial", "tutorial-service"],
+        },
+        {
+          type: "category",
+          label: "How-to Guides",
+          collapsed: false,
+          items: [
+            "guides/existing-guide",
+            "guides/guide-id-here", // 👈 NEW page, added by this step
+          ],
+        },
       ],
     },
   ],
@@ -63,7 +106,8 @@ If `node` reports a syntax error (e.g., unmatched brace, trailing comma without 
 Add a link to the new page under the appropriate section in `docs/index.md`:
 
 - Reference pages go under the "Reference Documentation" heading.
-- Guides go under a "Guides" heading (create it if missing, after the reference section).
+- Integration pages, tutorials and how-to guides go under "Integrations", "Tutorials" and "How-to
+  Guides" headings, in the sidebar order from Step 1 (create a heading if missing).
 
 ## Step 3: Cross-Reference Related Pages
 
