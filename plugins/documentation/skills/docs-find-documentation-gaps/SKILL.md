@@ -73,12 +73,13 @@ Beyond type-level coverage, look for missing conceptual documentation:
 4. **Architecture overview**: High-level design docs for contributors.
 5. **Published artifacts**: List every artifact the build publishes (every sbt project without
    `publish / skip := true`, with its platforms from `crossProject(...)` and its Scala versions from
-   `crossScalaVersions`). Compare w/ `libraryDependencies` blocks under `## Modules` in `docs/index.md`
-   (also generates `README.md`). **Critical** gap (GitHub/Maven readers can't find module or where it
-   runs): no `## Modules`; artifact line missing; comment purpose/platforms ≠ build; cross-built
-   module missing from `%%%` block (or JVM-only one in it); wrong Scala versions; missing docs link;
-   table instead of copy-pastable blocks. Expected shape → `docs-integrate`, "The published
-   artifacts list".
+   `crossScalaVersions`). Compare w/ `libraryDependencies` blocks in `docs/index.md` (also generates
+   `README.md`): required deps under `## Installation`, optional ones in `## Modules` `###`
+   subsections. **Critical** gap (GitHub/Maven readers can't find module or where it runs): no
+   `## Modules`; artifact line missing; comment purpose/platforms ≠ build; cross-built module missing
+   from `%%%` block (or JVM-only one in it); optional module in `## Installation`; test-only module w/o
+   `% Test`; wrong Scala versions; missing docs link; table instead of copy-pastable blocks. Expected
+   shape → `docs-integrate`, "The published artifacts list".
 
 Add these as a separate "Conceptual Gaps" section.
 

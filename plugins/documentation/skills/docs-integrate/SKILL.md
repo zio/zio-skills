@@ -120,10 +120,22 @@ Add a link to the new page under the appropriate section in `docs/index.md`:
 
 ### The published artifacts list
 
-`docs/index.md` → `## Modules`: every published artifact as copy-pastable `libraryDependencies`
-blocks, NEVER a table (Milad, 2026-11-17). `index.md` → `README.md` (`sbt docs/generateReadme`) →
-GitHub/Maven visitors see it; reader copies block into `build.sbt`, deletes unneeded lines. New page
-documents module w/ own artifact (YAML, golden testing, interop, macros) → add/update its line:
+`docs/index.md` lists every published artifact as copy-pastable `libraryDependencies` blocks, NEVER a
+table, required deps first (Milad, 2026-11-17). `index.md` → `README.md` (`sbt docs/generateReadme`)
+→ GitHub/Maven visitors see it; reader copies block into `build.sbt`, deletes unneeded lines.
+
+1. **`## Installation` = required deps only**: modules every project needs (core + whatever almost
+   every user adds, e.g. derivation), Scala-2-only extras (`scala-reflect`), published Scala versions
+   (one sentence), min-version cautions. `%%` block + `%%%` block (if cross-built).
+2. **`## Modules` = optional modules**, one `###` subsection per purpose (e.g. Codecs/Formats,
+   Integrations, Optics, Testing, Interop); intro sentence = all modules share core version + what they
+   depend on. Each subsection: `%%` block (all its modules), `%%%` block w/ only cross-built ones
+   (sentence before names JVM-only ones), docs links after. Single-module subsection → one line +
+   "use `%%%` on Scala.js/Native" sentence. Last: `### Internal Modules` → artifacts users never add
+   (macros) in 1 sentence, no line.
+
+New page documents module w/ own artifact (YAML, golden testing, interop, macros) → add/update its
+line in right subsection:
 
 ```scala
 libraryDependencies ++= Seq(
@@ -134,20 +146,16 @@ libraryDependencies ++= Seq(
 )
 ```
 
-- **No fact lost vs table.** 1 line/artifact; `//` comment above = purpose + platforms. Scala
-  versions: once, sentence before blocks; module differs (`crossScalaVersions -= Scala3`) → its
-  comment. Docs links: bullet list after blocks, 1 per module w/ own page. Artifact users never add
-  (internal macros) → 1 sentence, no line.
-- **1 block/platform kind.** `%%` block = every module (JVM). `%%%` block = cross-built only
-  (Scala.js/Native); comments drop platform tags; sentence before names modules w/o JS/Native
-  artifacts. Test-only module → `% Test`.
+- **No fact lost vs table.** 1 line/artifact; `//` comment above = purpose + platforms (`%%%` blocks
+  drop platform tags). Module w/ other Scala versions (`crossScalaVersions -= Scala3`) → its comment.
+  Test-only module (generators, golden testing) → `% Test`.
 - Align `%` cols; `@VERSION@`; plain ```` ```scala ```` (sbt settings ≠ mdoc).
 - **Source of truth = build.** Published = sbt project w/o `publish / skip := true`. Platforms ←
   `crossProject(JVMPlatform, JSPlatform, NativePlatform)` (plain `project` = JVM only). Scala
-  versions ← `crossScalaVersions` (watch `-= Scala3`). Doubt → Maven Central `_3`, `_sjs1_`,
-  `_native0.5_` artifacts of last release.
-- **1 copy only.** Getting Started, Reference index, Integrations index → link `index.md#modules`,
-  never repeat (copies drift).
+  versions ← `crossScalaVersions` (watch `-= Scala3`). Deps ← `.dependsOn(...)`. Doubt → Maven
+  Central `_3`, `_sjs1_`, `_native0.5_` artifacts of last release.
+- **1 copy only.** Getting Started, Reference index, Integrations index → link `index.md#installation`
+  / `index.md#modules`, never repeat (copies drift).
 
 ## Step 3: Cross-Reference Related Pages
 
