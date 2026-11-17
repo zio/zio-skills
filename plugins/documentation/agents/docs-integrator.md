@@ -9,12 +9,15 @@ effort: medium
 
 You wire a new documentation page into the ZIO documentation site.
 
-The prompt names the target category (e.g. "Guides" for a tutorial, "Reference" for a reference page)
+The prompt names the target category (e.g. "Tutorials" for a tutorial, "How-to Guides" for a how-to
+guide, "Reference" for a reference page)
 and the cross-reference direction appropriate to the page's kind. Use them below.
 
 Procedure:
 1. sidebars.js — the git-tracked one, found with `git ls-files "*sidebars.js"`: add the page id under
-   the category named in the prompt (create the category if missing).
+   the category named in the prompt (create the category if missing, at its position in the sidebar
+   order from the docs-integrate skill: Getting Started, Reference, optional Integrations, Tutorials,
+   How-to Guides).
    ✅ the path `git ls-files` prints (`docs/sidebars.js`, `website/sidebars.js`)
    ❌ `website/docs/sidebars.js` — mdoc output, gitignored, so an edit there ships nothing
    Verify it still parses: `node -e "require('<its path>')"`.

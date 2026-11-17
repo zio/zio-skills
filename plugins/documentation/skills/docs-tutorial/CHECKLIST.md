@@ -35,7 +35,7 @@ After writing, verify every item on this checklist:
 
 - [ ] The frontmatter `id` matches the filename
 - [ ] The tutorial is in `docs/guides/` (same directory as how-to guides)
-- [ ] The tutorial is added to `sidebars.js` under the "Guides" category
+- [ ] The tutorial is added to `sidebars.js` under the "Tutorials" category, which sits directly before "How-to Guides"
 - [ ] The tutorial is linked from `docs/index.md`
 - [ ] Related reference pages link back to this tutorial
 - [ ] Every link in "Where to Go Next" points at a page that actually exists — check before linking, and leave a mention unlinked (never a placeholder) when it doesn't. Never accept a stub page written just to make a link resolve.
