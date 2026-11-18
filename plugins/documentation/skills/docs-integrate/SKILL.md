@@ -21,12 +21,16 @@ sections in this order, top to bottom:
 
 1. **Introduction**: `index`, the plain first item of the top-level `sidebar` array, labelled
    "Introduction" through its `sidebar_label`. It is never the parent category of the other sections:
-   Getting Started, Reference and the rest are its siblings.
+   Getting Started, Reference and the rest are its siblings. The page `title` is "Introduction to
+   <Project Name>" (for example "Introduction to ZIO Config"), never a bare "Introduction".
 2. **Getting Started**: `getting-started`, the first item.
 3. **Concepts** (optional): explanation pages, the "why" (design, trade-offs, differences between
    versions, performance, security), with an `explanation/index` landing page as the category's
    `link`. If the section exists, it comes directly after Getting Started; explanation pages never sit
-   inside Reference.
+   inside Reference. It is a category only with 3 or more explanation pages: with one or two, there
+   is no "Concepts" category, and each page is a plain doc item at the same position (directly after
+   Getting Started, before Reference), labelled by its own `sidebar_label` or title, with no
+   `explanation/index` landing page.
 4. **Reference**: directly after Concepts, or after Getting Started when there is no Concepts
    section. Holds every feature or topic page and every API reference page, and only reference
    material: worked recipes belong in How-to Guides and rationale in Concepts. With more than about
@@ -36,12 +40,17 @@ sections in this order, top to bottom:
    before Tutorials and How-to Guides, never nested inside Reference.
 6. **Tutorials**: always directly before How-to Guides.
 7. **How-to Guides**.
+8. **What's New** (optional): release notes, a plain doc item after How-to Guides. Never inside
+   Reference, Tutorials or How-to Guides.
+9. **Resources** (optional): external talks, videos and articles, a plain doc item, last. Never inside
+   Reference.
 
 No other top-level sections: topic groups belong inside Reference.
 
 Place the new page by its type:
 
-- **Explanation pages**: under `"Concepts"`.
+- **Explanation pages**: under `"Concepts"` when that category exists (3 or more pages), otherwise
+  as a plain doc item at the Concepts position.
 - **Reference pages**: under `"Reference"`, inside the topic category that fits if Reference is
   nested, in logical order.
 - **Integration pages**: under `"Integrations"`.
