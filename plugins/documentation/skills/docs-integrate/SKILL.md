@@ -141,6 +141,7 @@ line in right subsection:
 libraryDependencies ++= Seq(
   // JSON codecs derived at compile time (JVM, Scala.js, Native)
   "dev.zio" %% "zio-json"      % "@VERSION@",
+
   // Read and write YAML (JVM only)
   "dev.zio" %% "zio-json-yaml" % "@VERSION@"
 )
@@ -149,7 +150,8 @@ libraryDependencies ++= Seq(
 - **No fact lost vs table.** 1 line/artifact; `//` comment above = purpose + platforms (`%%%` blocks
   drop platform tags). Module w/ other Scala versions (`crossScalaVersions -= Scala3`) → its comment.
   Test-only module (generators, golden testing) → `% Test`.
-- Align `%` cols; `@VERSION@`; plain ```` ```scala ```` (sbt settings ≠ mdoc).
+- Blank line between entries in `Seq(...)` (each comment + its line = 1 entry; no comments → blank line
+  between dep lines) (Milad, 2026-11-17). Align `%` cols; `@VERSION@`; plain ```` ```scala ```` (sbt settings ≠ mdoc).
 - **Source of truth = build.** Published = sbt project w/o `publish / skip := true`. Platforms ←
   `crossProject(JVMPlatform, JSPlatform, NativePlatform)` (plain `project` = JVM only). Scala
   versions ← `crossScalaVersions` (watch `-= Scala3`). Deps ← `.dependsOn(...)`. Doubt → Maven
