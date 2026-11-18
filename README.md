@@ -145,6 +145,7 @@ Authoring helpers:
 - **`docs-research`** — Shared research procedure (find source, tests, examples, history)
 - **`docs-integrate`** — Wire a new doc page into Docusaurus navigation
 - **`docs-organize-types`** — Group types into logical sidebar categories
+- **`docs-sidebar-structure`** — Restructure or reorder a project's whole sidebar in the ZIO section order
 
 Quality checks:
 - **`docs-writing-style-judgment`** — Judgment-based prose rules requiring language understanding (Rules J-1 to J-9)
