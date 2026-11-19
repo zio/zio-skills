@@ -120,17 +120,20 @@ Add a link to the new page under the appropriate section in `docs/index.md`:
 
 ### The published artifacts list
 
-`docs/index.md` lists every published artifact as copy-pastable `libraryDependencies` blocks, NEVER a
-table, required deps first (Milad, 2026-11-17). `index.md` → `README.md` (`sbt docs/generateReadme`)
+`docs/index.md` lists every published artifact as copy-pastable `libraryDependencies` lines, NEVER a
+table and NEVER a `Seq(...)`: one `libraryDependencies += ...` line per artifact, required deps first
+(Milad, 2026-11-17; `Seq` ban Milad, 2026-11-19). Each line has its `//` comment directly above it, so a
+reader copies one artifact at a time and deletes the lines they do not need. `index.md` → `README.md` (`sbt docs/generateReadme`)
 → GitHub/Maven visitors see it; reader copies block into `build.sbt`, deletes unneeded lines.
 
 1. **`## Installation` = required deps only**: modules every project needs (core + whatever almost
    every user adds, e.g. derivation), Scala-2-only extras (`scala-reflect`), published Scala versions
-   (one sentence), min-version cautions. `%%` block + `%%%` block (if cross-built).
+   (one sentence), min-version cautions. One line per artifact with `%%`; for cross-built artifacts,
+   a second group of `%%%` lines, one per artifact, after a sentence that names any JVM-only ones.
 2. **`## Modules` = optional modules**, one `###` subsection per purpose (e.g. Codecs/Formats,
    Integrations, Optics, Testing, Interop); intro sentence = all modules share core version + what they
-   depend on. Each subsection: `%%` block (all its modules), `%%%` block w/ only cross-built ones
-   (sentence before names JVM-only ones), docs links after. Single-module subsection → one line +
+   depend on. Each subsection: one `%%` line per module (all of them), then `%%%` lines for the
+   cross-built ones only (sentence before names JVM-only ones), docs links after. Single-module subsection → one line +
    "use `%%%` on Scala.js/Native" sentence. Last: `### Internal Modules` → artifacts users never add
    (macros) in 1 sentence, no line.
 
@@ -138,20 +141,23 @@ New page documents module w/ own artifact (YAML, golden testing, interop, macros
 line in right subsection:
 
 ```scala
-libraryDependencies ++= Seq(
-  // JSON codecs derived at compile time (JVM, Scala.js, Native)
-  "dev.zio" %% "zio-json"      % "@VERSION@",
+// JSON codecs derived at compile time (JVM, Scala.js, Native)
+libraryDependencies += "dev.zio" %% "zio-json" % "@VERSION@"
 
-  // Read and write YAML (JVM only)
-  "dev.zio" %% "zio-json-yaml" % "@VERSION@"
-)
+// Read and write YAML (JVM only)
+libraryDependencies += "dev.zio" %% "zio-json-yaml" % "@VERSION@"
 ```
 
 - **No fact lost vs table.** 1 line/artifact; `//` comment above = purpose + platforms (`%%%` blocks
   drop platform tags). Module w/ other Scala versions (`crossScalaVersions -= Scala3`) → its comment.
   Test-only module (generators, golden testing) → `% Test`.
-- Blank line between entries in `Seq(...)` (each comment + its line = 1 entry; no comments → blank line
-  between dep lines) (Milad, 2026-11-17). Align `%` cols; `@VERSION@`; plain ```` ```scala ```` (sbt settings ≠ mdoc).
+- **Never `Seq(...)`; always `libraryDependencies += ...` per line** (Milad, 2026-11-19). Grouping
+  artifacts in a `Seq` makes the reader copy the whole list; one line each lets them copy what they need.
+  Put a blank line between entries (comment + line = 1 entry). Check: no `++=` or `Seq(` anywhere in the
+  published-artifacts section of `index.md` (`grep -n 'Seq(\|++=' docs/index.md` must print nothing).
+  `@VERSION@`; plain ```` ```scala ```` (sbt settings ≠ mdoc).
+- **Lint for this rule:** every `libraryDependencies` line in the list has a `//` comment on the line above;
+  every artifact in `build.sbt` without `publish / skip` appears exactly once.
 - **Source of truth = build.** Published = sbt project w/o `publish / skip := true`. Platforms ←
   `crossProject(JVMPlatform, JSPlatform, NativePlatform)` (plain `project` = JVM only). Scala
   versions ← `crossScalaVersions` (watch `-= Scala3`). Deps ← `.dependsOn(...)`. Doubt → Maven
